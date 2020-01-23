@@ -1,10 +1,14 @@
+GET GIT REPO
+git clone https://github.com/JALeo123/JJRTS-Channel-Simulator.git
+git init
+
 SAVE YOUR GIT ACCOUNT TO PC
 git config user.email "youremail"
+
+PROCESS TO CREATE A NEW BRANCH (by default you are in the master branch)
+git checkout -b ~branchname~  
 
 PROCESS TO PUSH THINGS TO GIT
 git add .
 git commit -m "message"
 git push origin ~branch~
-
-PROCESS TO CREATE A NEW BRANCH
-git checkout -b ~branchname~  
