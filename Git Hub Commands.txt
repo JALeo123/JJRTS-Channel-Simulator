@@ -1,0 +1,10 @@
+SAVE YOUR GIT ACCOUNT TO PC
+git config user.email "youremail"
+
+PROCESS TO PUSH THINGS TO GIT
+git add .
+git commit -m "message"
+git push origin ~branch~
+
+PROCESS TO CREATE A NEW BRANCH
+git checkout -b ~branchname~  
