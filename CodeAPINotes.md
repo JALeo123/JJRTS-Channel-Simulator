@@ -2,10 +2,10 @@
 ## Useful Documentation Links
 **Overall Documentation**  
 https://docs.myriadrf.org/LMS_API/index.html  
-http://pothosware.github.io/SoapySDR/doxygen/latest/annotated.html
+http://pothosware.github.io/SoapySDR/doxygen/latest/annotated.html  
 **Code Examples**  
 LimeSuite  
-https://github.com/myriadrf/LimeSuite/tree/master/src/examples
+https://github.com/myriadrf/LimeSuite/tree/master/src/examples  
 SoapySDR  
 https://github.com/pothosware/SoapySDR/wiki/C_API_Example  
 https://github.com/pothosware/SoapySDR/wiki/Cpp_API_Example  
