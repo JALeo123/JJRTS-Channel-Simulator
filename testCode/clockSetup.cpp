@@ -2,7 +2,7 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
-//#include <Si5351C/Si5351C.h>
+#include <Si5351C/Si5351C.h>
 //#include <ADF4002.h>
 
 using namespace std;
