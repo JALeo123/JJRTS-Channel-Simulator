@@ -78,9 +78,7 @@ def Ethernet_Recieve(buffer1, buffer2):
 
     #Listen for incoming datagrams
     active_buffer = 1
-    ct =0
     while(1):
-        ct +=1
         #Obtain buffer locations
         if(active_buffer == 1):
             hm_list = buffer1[2]
@@ -219,10 +217,8 @@ def LimeSDR_Functions(buffer1, buffer2):
     print("Activation Complete")
     time.sleep(1)
     '''
-    ct = 0
     while(1):
         if(buffer1[0] == 1 or buffer2[0] == 1):
-            ct += 1
             if(buffer1[0] == 1):
                 b = 1
                 buffer1[0] = 0

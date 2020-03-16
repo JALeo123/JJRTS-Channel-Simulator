@@ -38,7 +38,7 @@ ssr_list = [int(Operability),int(Status_1),int(Status_2),
             int(Status_3),int(Status_4)]
 ssr_list_bytes = [4,4,4,4,4]
 
-msgType = -1
+msgType = 1
 message = struct.pack('i', msgType)
 select_list = []
 select_list_bytes = []
