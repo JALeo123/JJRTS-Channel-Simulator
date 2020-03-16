@@ -68,7 +68,6 @@ while(ct < 3):
     print(clientIP)
     
     type1, = struct.unpack('i', message[0:4])
-    print(type1)
     if(type1 == 1):
         select_list = hm_list.copy()
         name_list = hm_list_nm
