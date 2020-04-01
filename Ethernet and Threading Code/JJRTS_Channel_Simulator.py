@@ -9,6 +9,21 @@ import struct
 import threading
 
 def main():
+    #Memory Buffers, first element is active state, second is message type
+    buffer1 = [0]
+    buffer2 = [0]
+    active = [1] #Can only be 1 or 2, in a list due to pointers
+    t1 = threading.Thread(target=Ethernet_Recieve, args=(buffer1,buffer2,active,))
+    t2 = threading.Thread(target=LimeSDR_Functions, args=(buffer1,buffer2,active,))
+    
+    t1.start()
+    t2.start()
+    
+    t1.join()
+    t2.join()
+                    
+
+def Ethernet_Recieve(buffer1, buffer2, active):
     #Messages to be Recieved based on L3Harris Data
     #Header Message (1)
     Message_ID = 4          #Byte Length = 4, Type INT
@@ -51,21 +66,10 @@ def main():
     ssr_list_nm = ["Operability","Status_1","Status_2",
                     "Status_3","Status_4"]
        
-    #Memory Buffers, first element is active state, second is message type
-    buffer1 = [0, 0, hm_list, hm_list_nm, bsc_list, bsc_list_nm, ssr_list, ssr_list_nm]
-    buffer2 = [0, 0, hm_list, hm_list_nm, bsc_list, bsc_list_nm, ssr_list, ssr_list_nm]
-    t1 = threading.Thread(target=Ethernet_Recieve, args=(buffer1,buffer2,))
-    t2 = threading.Thread(target=LimeSDR_Functions, args=(buffer1,buffer2,))
-    
-    t1.start()
-    t2.start()
-    
-    t1.join()
-    t2.join()
-                    
-
-def Ethernet_Recieve(buffer1, buffer2):
+       
     print_info = 0
+    
+    buffer_struct_master = [0, hm_list, hm_list_nm, bsc_list, bsc_list_nm, ssr_list, ssr_list_nm] #First var is message type
     
     #Create a datagram socket
     localIP     = "0.0.0.0"
@@ -77,24 +81,17 @@ def Ethernet_Recieve(buffer1, buffer2):
     UDPServerSocket.bind((localIP, localPort))
 
     #Listen for incoming datagrams
-    active_buffer = 1
+    active_buffer = active[0]
     while(1):
         #Obtain buffer locations
-        if(active_buffer == 1):
-            hm_list = buffer1[2]
-            hm_list_nm = buffer1[3]
-            bsc_list = buffer1[4]
-            bsc_list_nm = buffer1[5]
-            ssr_list = buffer1[6]
-            ssr_list_nm = buffer1[7]
-        elif(active_buffer == 2):
-            hm_list = buffer2[2]
-            hm_list_nm = buffer2[3]
-            bsc_list = buffer2[4]
-            bsc_list_nm = buffer2[5]
-            ssr_list = buffer2[6]
-            ssr_list_nm = buffer2[7]
-    
+        buffer_struct = buffer_struct_master.copy()
+        hm_list = buffer_struct[1]
+        hm_list_nm = buffer_struct[2]
+        bsc_list = buffer_struct[3]
+        bsc_list_nm = buffer_struct[4]
+        ssr_list = buffer_struct[5]
+        ssr_list_nm = buffer_struct[6]
+
         select_list = []
         name_list = []
         bytesAddressPair = UDPServerSocket.recvfrom(bufferSize)
@@ -106,10 +103,7 @@ def Ethernet_Recieve(buffer1, buffer2):
         
         type1, = struct.unpack('i', message[0:4])
 
-        if(active_buffer == 1):
-            buffer1[1] = type1
-        elif(active_buffer == 2):
-            buffer2[1] = type1
+        buffer_struct[0] = type1
 
         if(type1 == 1 or type1 == -1):
             select_list = hm_list
@@ -145,22 +139,31 @@ def Ethernet_Recieve(buffer1, buffer2):
                 
             print("\n")
             
-        #change active buffer
         if (active_buffer == 1):
-            buffer1[0] = 1 #Set buffer to active
-            active_buffer = 2
+            buffer1.append(buffer_struct)
         else:
+            buffer2.append(buffer_struct)
+            
+        #change active buffer
+        if (active_buffer == 1 and active[0] == 2):
+            buffer1[0] = 1 #Set buffer to active
+            active_buffer = active[0]
+        elif(active_buffer == 2 and active[0] == 1):
             buffer2[0] = 1 #Set buffer to active
-            active_buffer = 1
+            active_buffer = active[0]
             
         del(select_listInfo)
-        if(type1 == -1):
+        if(type1 == -1): #Exit Commands
             print("Exit Command: Ethernet Thread Exiting")
+            if (active_buffer == 1):
+                buffer1[0] = 1 #Set buffer to active
+            elif(active_buffer == 2):
+                buffer2[0] = 1 #Set buffer to active
             break
     UDPServerSocket.close()
 
 
-def LimeSDR_Functions(buffer1, buffer2):
+def LimeSDR_Functions(buffer1, buffer2, active):
     print_info = 1
     '''
     #enumerate devices
@@ -217,44 +220,71 @@ def LimeSDR_Functions(buffer1, buffer2):
     print("Activation Complete")
     time.sleep(1)
     '''
+    exit = 0
     while(1):
+    
+        ####ADD CODE HERE TO CHANGE CYCLE
+        active[0] = 1
+        active[0] = 2
+        #####SWAP BETWEEN BUFFERS
+        
         if(buffer1[0] == 1 or buffer2[0] == 1):
             if(buffer1[0] == 1):
                 b = 1
-                buffer1[0] = 0
-                buffer = buffer1.copy()
+                #buffer1[0] = 0
+                buffer_struct = buffer1.copy()
+                buffer1.clear()
+                buffer1.append(0)
             elif(buffer2[0] == 1):
                 b = 2
-                buffer2[0] = 0
-                buffer = buffer2.copy()
+                #buffer2[0] = 0
+                buffer_struct = buffer2.copy()
+                buffer2.clear()
+                buffer2.append(0)
             print("Buffer", str(b)," active!")
 
-            type1 = buffer[1]
-            hm_list = buffer[2]
-            hm_list_nm = buffer[3]
-            bsc_list = buffer[4]
-            bsc_list_nm = buffer[5]
-            ssr_list = buffer[6]
-            ssr_list_nm = buffer[7]
-            if(type1 == 1):
-                select_list = hm_list.copy()
-                name_list = hm_list_nm
-            if(type1 == 2):
-                select_list = bsc_list.copy()
-                name_list = bsc_list_nm
-            if(type1 == 3):
-                select_list = ssr_list.copy()
-                name_list = ssr_list_nm
-            if(type1 == -1):
-                print("Exit Command: LimeSDR Thread Exiting")
-                break
-                
-            if (print_info == 1):
-                for i in range(len(name_list)):
-                    print(name_list[i] , ": " , select_list[i])
-            print("\n") 
-            #sr_read = sdr.readStream(rx_stream, [buff], len(buff))
-            #sr_write = sdr.writeStream(tx_stream, [buff], len(buff))
+            for i in range(1,len(buffer_struct)):
+                buffer = buffer_struct[i]
+                type1 = buffer[0]
+                hm_list = buffer[1]
+                hm_list_nm = buffer[2]
+                bsc_list = buffer[3]
+                bsc_list_nm = buffer[4]
+                ssr_list = buffer[5]
+                ssr_list_nm = buffer[6]
+                if(type1 == 1):
+                    select_list = hm_list.copy()
+                    name_list = hm_list_nm
+                if(type1 == 2):
+                    select_list = bsc_list.copy()
+                    name_list = bsc_list_nm
+                if(type1 == 3):
+                    select_list = ssr_list.copy()
+                    name_list = ssr_list_nm
+                if(type1 == -1):
+                    print("Exit Command: LimeSDR Thread Exiting")
+                    exit = 1
+                    break
+                    
+                #Enum Integration
+                #Type2 Signal, Beam Steet Command
+                pulse_type = ["n/a","1 usec/CW","10 usec/CW","16 usec/1MHz LFM","25 usec/CW",
+                                "32 usec/1MHz LFM","64 usec/1MHz LFM","125 usec/CW","128 usec/100kHz LFM",
+                                "128 usec/1MH LFM","250 usec/100kHz LFM","250 usec/1MHz LFM"]
+                operability = ["Green","White","Yellow","Red"]
+                if(type1 == 2):
+                    select_list[3] = pulse_type[select_list[3]]
+                if(type1 == 3):
+                    select_list[0] = operability[select_list[0]]
+                    
+                if (print_info == 1):
+                    for i in range(len(name_list)):
+                        print(name_list[i] , ": " , select_list[i])
+                print("\n") 
+                #sr_read = sdr.readStream(rx_stream, [buff], len(buff))
+                #sr_write = sdr.writeStream(tx_stream, [buff], len(buff))
+        if(exit == 1):
+            break
     '''
     print("Closing Streams")
     sdr.deactivateStream(rx_stream)
