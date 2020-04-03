@@ -165,7 +165,7 @@ def Ethernet_Recieve(buffer1, buffer2, active):
 
 def LimeSDR_Functions(buffer1, buffer2, active):
     print_info = 1
-    '''
+
     #enumerate devices
     results = SoapySDR.Device.enumerate()
     for result in results: print(result)
@@ -206,8 +206,8 @@ def LimeSDR_Functions(buffer1, buffer2, active):
     sdr.setBandwidth(SOAPY_SDR_TX, 0, bandwidth)
 
     #create a re-usable buffer for rx samples
-    buff = numpy.array([0]*4096, numpy.complex64)
-    print("\nBuffer Length:", len(buff), "\n")
+    #buff = numpy.array([0]*1024, numpy.complex64)
+    #print("\nBuffer Length:", len(buff), "\n")
 
     #setup a stream (complex floats)
     rx_stream = sdr.setupStream(SOAPY_SDR_RX, SOAPY_SDR_CF32)
@@ -219,7 +219,7 @@ def LimeSDR_Functions(buffer1, buffer2, active):
     sdr.activateStream(rx_stream)
     print("Activation Complete")
     time.sleep(1)
-    '''
+
     exit = 0
     while(1):
     
@@ -277,21 +277,35 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                 if(type1 == 3):
                     select_list[0] = operability[select_list[0]]
                     
-                if (print_info == 1):
+                if (print_info == 1): #Print Incoming Buffer
                     for i in range(len(name_list)):
                         print(name_list[i] , ": " , select_list[i])
                 print("\n") 
-                #sr_read = sdr.readStream(rx_stream, [buff], len(buff))
-                #sr_write = sdr.writeStream(tx_stream, [buff], len(buff))
+                
+                buff = numpy.array([0]*1024, numpy.complex64)
+                sr_read = sdr.readStream(rx_stream, [buff], len(buff))
+                
+                if(type1 == 2): #LimeSDR Functions, Signal Manipulations
+                    tm_delay = int(select_list[4])
+                    phs_shift = int(select_list[5])
+                    if(tm_delay > 0): #Time Delay
+                        #Create Buffer Extender with 0 values
+                        tm_delay_arry = numpy.array([0]*tm_delay, numpy.complex64)
+                        buff = np.append(tm_delay_arry, buff)
+                    if(phs_shift > 0): #Phase Shift
+                        pass #ADD PHASE SHIFT CODE HERE!!!
+                        
+                sr_write = sdr.writeStream(tx_stream, [buff], len(buff))
+                
         if(exit == 1):
             break
-    '''
+
     print("Closing Streams")
     sdr.deactivateStream(rx_stream)
     sdr.deactivateStream(tx_stream)
     sdr.closeStream(rx_stream)
     sdr.closeStream(tx_stream)
-    '''
+
 
 if __name__ == "__main__":
     main()
