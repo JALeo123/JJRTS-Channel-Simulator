@@ -2,7 +2,7 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
-
+#include <stdlib.h>
 
 //Device structure, should be initialize to NULL
 lms_device_t* device = NULL;
@@ -16,7 +16,7 @@ int error()
 
 void print_gpio(int gpio_val)
 {
-    for (int i = 0; i < 8; i++)
+    for (int i =0; i < 8; i++)
     {
         bool set = gpio_val&(1<<i); 
         std::cout << "GPIO" << i <<": " << (set ? "High" : "Low") << std::endl;
@@ -42,9 +42,12 @@ int main(int argc, char** argv)
     //Read current GPIO pins state using LMS_GPIORead()
     std::cout << "Read current GPIO state:" << std::endl;
     uint8_t gpio_val = 0;
-    if (LMS_GPIORead(device, &gpio_val, 1)!=0) //1 byte buffer is enough to read 8 GPIO pins on LimeSDR-USB
-        error();
-    print_gpio(gpio_val);
-    
+    //while(1){
+    	if (LMS_GPIORead(device, &gpio_val, 1)!=0) //1 byte buffer is enough to read 8 GPIO pins on LimeSDR-USB
+        	error();
+    		print_gpio(gpio_val);
+   //	sleep(250);
+   
+   // }
     return 0;
 }
