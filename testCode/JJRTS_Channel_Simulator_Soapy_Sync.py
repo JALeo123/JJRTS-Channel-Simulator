@@ -205,12 +205,22 @@ def LimeSDR_Functions(buffer1, buffer2, active):
     sdr.setBandwidth(SOAPY_SDR_RX, 0, bandwidth)
     sdr.setBandwidth(SOAPY_SDR_TX, 0, bandwidth)
 
+    #Clock Sources - Try to use External reference clock for something useful
+    print("************* Clock Stuff ****************")
+    #sdr.setClockSource(REF_CLK_IN)
+    print(sdr.getMasterClockRate())
+    print(sdr.listClockSources())
+    print(sdr.getClockSource())
+    print(sdr.getTimeSource())
+    
+    #print(sdr.getMasterClockRate())
+    #--------------------------------------------------------
+
     #create a re-usable buffer for rx samples
     #buff = numpy.array([0]*1024, numpy.complex64)
     #print("\nBuffer Length:", len(buff), "\n")
     prevhwTime = 0
     #Set buffer 1 to active to get the program started
-    buffer1[0] = 1
     #setup a stream (complex floats)
     rx_stream = sdr.setupStream(SOAPY_SDR_RX, SOAPY_SDR_CF32)
     tx_stream = sdr.setupStream(SOAPY_SDR_TX, SOAPY_SDR_CF32)
