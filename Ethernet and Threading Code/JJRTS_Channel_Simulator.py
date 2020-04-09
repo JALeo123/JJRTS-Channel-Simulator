@@ -231,13 +231,13 @@ def LimeSDR_Functions(buffer1, buffer2, active):
         if(buffer1[0] == 1 or buffer2[0] == 1):
             if(buffer1[0] == 1):
                 b = 1
-                #buffer1[0] = 0
+                buffer1[0] = 0
                 buffer_struct = buffer1.copy()
                 buffer1.clear()
                 buffer1.append(0)
             elif(buffer2[0] == 1):
                 b = 2
-                #buffer2[0] = 0
+                buffer2[0] = 0
                 buffer_struct = buffer2.copy()
                 buffer2.clear()
                 buffer2.append(0)

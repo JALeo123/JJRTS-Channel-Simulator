@@ -306,19 +306,6 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                 buff = numpy.array([0]*1024, numpy.complex64)
                 sr_read = sdr.readStream(rx_stream, [buff], len(buff))
 
-                # Buffer Switch Logic - using timeNs -------------
-                hwTime = sr_read.timeNs
-                print(hwTime)
-                if(hwTime==0 and hwTime != prevhwTime):
-                    if active[0] == 1: 
-                        active[0]=2
-                        print("Buffer2 Active")
-                    elif active[0] == 2:
-                        active[0]=1
-                        print("Buffer1 Active")
-                prevhwTime = hwTime
-                #--------------------------------------------------
-
                 if(type1 == 2): #LimeSDR Functions, Signal Manipulations
                     tm_delay = int(select_list[4])
                     print(tm_delay)
@@ -331,8 +318,33 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                     if(phs_shift > 0): #Phase Shift
                         pass #ADD PHASE SHIFT CODE HERE!!!
                         
-                sr_write = sdr.writeStream(tx_stream, [buff], len(buff))
+                sr_write = sdr.writeStream(tx_stream, [buff], len(buff))      
                 
+                # Buffer Switch Logic - using timeNs -------------
+                hwTime = sr_read.timeNs
+                print(hwTime)
+                if(hwTime==0 and hwTime != prevhwTime):
+                    if active[0] == 1: 
+                        active[0]=2
+                    elif active[0] == 2:
+                        active[0]=1
+                prevhwTime = hwTime
+                #--------------------------------------------------
+        elif: #Deafult ADC/DAC pass through
+            buff = numpy.array([0]*1024, numpy.complex64)
+            sr_read = sdr.readStream(rx_stream, [buff], len(buff))
+            sr_write = sdr.writeStream(tx_stream, [buff], len(buff))
+            # Buffer Switch Logic - using timeNs -------------
+            hwTime = sr_read.timeNs
+            print(hwTime)
+            if(hwTime==0 and hwTime != prevhwTime):
+                if active[0] == 1: 
+                    active[0]=2
+                elif active[0] == 2:
+                    active[0]=1
+            prevhwTime = hwTime
+            #--------------------------------------------------
+            
         if(exit == 1):
             break
 
