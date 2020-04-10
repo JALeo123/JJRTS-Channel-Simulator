@@ -180,7 +180,7 @@ def LimeSDR_Functions(buffer1, buffer2, active):
     #TBD
 
     #Set Sampling Rate
-    smp_rate = 2e6
+    smp_rate = 10e6
     sdr.setSampleRate(SOAPY_SDR_RX, 0, smp_rate)
     print("Receiver Sampling Rate:", sdr.getSampleRate(SOAPY_SDR_RX, 0))
     sdr.setSampleRate(SOAPY_SDR_TX, 0, smp_rate)
@@ -207,7 +207,7 @@ def LimeSDR_Functions(buffer1, buffer2, active):
 
     #Clock Sources - Try to use External reference clock for something useful
     print("************* Clock Stuff ****************")
-    #sdr.setClockSource(REF_CLK_IN)
+    
     print(sdr.getMasterClockRate())
     print(sdr.listClockSources())
     print(sdr.getClockSource())
@@ -236,17 +236,18 @@ def LimeSDR_Functions(buffer1, buffer2, active):
     while(1):
     
         ####ADD CODE HERE TO CHANGE CYCLE
-        """ hwTime = sdr.getHardwareTime()
-        print(hwTime)
+        hwTime = sdr.getHardwareTime()
+        #print(hwTime)
         if(hwTime==0 and hwTime != prevhwTime):
             if active[0] == 1: 
                 active[0]=2
-                print("Buffer2 Active")
+                #print("buffer2 active")
             elif active[0] == 2:
                 active[0]=1
-                print("Buffer1 Active")
+                #print("buffer1 active")
 
-        prevhwTime = hwTime """
+
+        prevhwTime = hwTime
         #####SWAP BETWEEN BUFFERS
         
         if(buffer1[0] == 1 or buffer2[0] == 1):
@@ -305,8 +306,9 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                 
                 buff = numpy.array([0]*1024, numpy.complex64)
                 sr_read = sdr.readStream(rx_stream, [buff], len(buff))
-
                 if(type1 == 2): #LimeSDR Functions, Signal Manipulations
+                    st_time = int(select_list[2])
+                    end_time = int(select_list[3])
                     tm_delay = int(select_list[4])
                     print(tm_delay)
                     phs_shift = int(select_list[5])
@@ -321,29 +323,21 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                 sr_write = sdr.writeStream(tx_stream, [buff], len(buff))      
                 
                 # Buffer Switch Logic - using timeNs -------------
-                hwTime = sr_read.timeNs
-                print(hwTime)
+                """hwTime = sr_read.timeNs
                 if(hwTime==0 and hwTime != prevhwTime):
                     if active[0] == 1: 
                         active[0]=2
                     elif active[0] == 2:
                         active[0]=1
-                prevhwTime = hwTime
+                prevhwTime = hwTime"""
                 #--------------------------------------------------
-        elif: #Deafult ADC/DAC pass through
+        else: #Deafult ADC/DAC pass through
             buff = numpy.array([0]*1024, numpy.complex64)
             sr_read = sdr.readStream(rx_stream, [buff], len(buff))
             sr_write = sdr.writeStream(tx_stream, [buff], len(buff))
-            # Buffer Switch Logic - using timeNs -------------
-            hwTime = sr_read.timeNs
-            print(hwTime)
-            if(hwTime==0 and hwTime != prevhwTime):
-                if active[0] == 1: 
-                    active[0]=2
-                elif active[0] == 2:
-                    active[0]=1
-            prevhwTime = hwTime
-            #--------------------------------------------------
+            bufferTime = sr_read.timeNs
+            print(bufferTime)
+
             
         if(exit == 1):
             break
