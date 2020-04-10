@@ -307,19 +307,26 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                 buff = numpy.array([0]*1024, numpy.complex64)
                 sr_read = sdr.readStream(rx_stream, [buff], len(buff))
                 if(type1 == 2): #LimeSDR Functions, Signal Manipulations
-                    st_time = int(select_list[2])
-                    end_time = int(select_list[3])
+                    #truncating division to determine command start and end times
+                    st_time = int(select_list[2]//512000)
+                    end_time = int(select_list[3]//512000)
+
                     tm_delay = int(select_list[4])
                     print(tm_delay)
                     phs_shift = int(select_list[5])
-                    if(tm_delay > 0): #Time Delay
-                        #Create Buffer Extender with 0 values
-                        tm_delay_arry = numpy.array([0]*tm_delay, numpy.complex64)
-                        buff = np.append(tm_delay_arry, buff)
+                    #check if it is the right time to apply the command
+                    if((sr_read.timeNs//512000) == st_time)
+                        #implement commanded delay and phase at correct time     
+                        if(tm_delay > 0): #Time Delay
+                            #Create Buffer Extender with 0 values
+                            tm_delay_arry = numpy.array([0]*tm_delay, numpy.complex64)
+                            buff = np.append(tm_delay_arry, buff)
                 
-                    if(phs_shift > 0): #Phase Shift
-                        pass #ADD PHASE SHIFT CODE HERE!!!
-                        
+                        if(phs_shift > 0): #Phase Shift
+                            pass #ADD PHASE SHIFT CODE HERE!!
+                    elif((sr_read.timeNs//512000) == end_time)
+                        #apply phase and time delay 0 at end of effect time
+
                 sr_write = sdr.writeStream(tx_stream, [buff], len(buff))      
                 
                 # Buffer Switch Logic - using timeNs -------------
