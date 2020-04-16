@@ -54,7 +54,6 @@ print("\nBuffer Length:", len(buff1), "\n")
 
 #setup a stream (complex floats)
 rx_stream = sdr.setupStream(SOAPY_SDR_RX, SOAPY_SDR_CF32)
-
 tx_stream = sdr.setupStream(SOAPY_SDR_TX, SOAPY_SDR_CF32)
 time.sleep(1)
 
@@ -100,7 +99,7 @@ class delay(object):
 class phase_shift(object): 
 
 	#initialize object
-	def __init__(self, buff_size = 4096, phase_index = 0):
+	def __init__(self, buff_size = buff_len, phase_index = 0):
 
 		#Phase shift using complex multiplication/LUTs
 		self.ptr = 0
@@ -133,8 +132,8 @@ keep_streaming = True
 while(keep_streaming):
 
 	#rqs_delay and rqs_phase variables are set by ethernet command
-	cbuf1.set_delay = rqs_delay
-	phase1.set_phase = rqs_phase
+	cbuf1.set_delay(rqs_delay)
+	phase1.set_phase(rqs_phase)
 	
 	if pingpong == 0:
 		sr_read = sdr.readStream(rx_stream, [buff1], len(buff1))
