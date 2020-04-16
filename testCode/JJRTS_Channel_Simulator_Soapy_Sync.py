@@ -7,6 +7,9 @@ import asyncio
 import socket
 import struct
 import threading
+import math
+import matplotlib.pyplot as plt
+from SoapySDR import SOAPY_SDR_RX, SOAPY_SDR_CS16, SOAPY_SDR_TX
 
 def main():
     #Memory Buffers, first element is active state, second is message type
@@ -180,14 +183,14 @@ def LimeSDR_Functions(buffer1, buffer2, active):
     #TBD
 
     #Set Sampling Rate
-    smp_rate = 10e6
+    smp_rate = 2e6
     sdr.setSampleRate(SOAPY_SDR_RX, 0, smp_rate)
     print("Receiver Sampling Rate:", sdr.getSampleRate(SOAPY_SDR_RX, 0))
     sdr.setSampleRate(SOAPY_SDR_TX, 0, smp_rate)
     print("Transmitter Sampling Rate:", sdr.getSampleRate(SOAPY_SDR_TX, 0), "\n")
 
     #Set Channel Frequencies
-    freq = 70e6
+    freq = 20e6
     sdr.setFrequency(SOAPY_SDR_RX, 0, freq)
     print("\nReceiver Channel Frequency:", sdr.getFrequency(SOAPY_SDR_RX, 0))
     sdr.setFrequency(SOAPY_SDR_TX, 0, freq)
@@ -201,13 +204,13 @@ def LimeSDR_Functions(buffer1, buffer2, active):
     print("Transmitter Channel Gain:", sdr.getGain(SOAPY_SDR_TX, 0), "\n")
 
     #Set Bandwidth
-    bandwidth = 20.5e6
+    bandwidth = 2e6
     sdr.setBandwidth(SOAPY_SDR_RX, 0, bandwidth)
     sdr.setBandwidth(SOAPY_SDR_TX, 0, bandwidth)
 
     #Clock Sources - Try to use External reference clock for something useful
     print("************* Clock Stuff ****************")
-    
+    #sdr.setClockSource(REF_CLK_IN)
     print(sdr.getMasterClockRate())
     print(sdr.listClockSources())
     print(sdr.getClockSource())
@@ -225,6 +228,8 @@ def LimeSDR_Functions(buffer1, buffer2, active):
     rx_stream = sdr.setupStream(SOAPY_SDR_RX, SOAPY_SDR_CF32)
     tx_stream = sdr.setupStream(SOAPY_SDR_TX, SOAPY_SDR_CF32)
     time.sleep(1)
+    sdr.setDCOffsetMode(SOAPY_SDR_RX, 0, False)
+    sdr.setDCOffsetMode(SOAPY_SDR_TX, 0, False)
 
     print("Activate TX and RX Stream")
     sdr.activateStream(tx_stream)
@@ -232,24 +237,86 @@ def LimeSDR_Functions(buffer1, buffer2, active):
     print("Activation Complete")
     time.sleep(1)
     
+    #Create class to initialize DSP object and such
+    class delay(object): 
+        #initialize object
+        def __init__(self, delay_samps = 0, buff_size = buff_len, phase_index = 0):
+            # Time delay using circular buffer
+            self.delay = delay_samps
+            self.ptr = 0
+            self.buffsize = buff_size
+            self.cirbuff = numpy.array([0]*buff_size, numpy.complex64)
+
+        #Set user defines delay
+        def set_delay(self, new_delay):
+            self.delay = new_delay
+
+        def process_sample(self, buff):
+            self.cirbuff[self.ptr] = buff
+            buffd = self.cirbuff[(self.ptr - self.delay) % self.buffsize]
+            self.ptr = (self.ptr + 1) % self.buffsize
+
+            return buffd
+
+        def process_frame(self, buff):
+            Nframe = len(buff)
+            buffd = numpy.array([0]*Nframe, numpy.complex64)
+            for k in range(Nframe):
+                buffd[k] = self.process_sample(buff[k])
+
+            return buffd
+
+    #Create class to initialize DSP object and such
+    class phase_shift(object): 
+
+        #initialize object
+        def __init__(self, buff_size = 4096, phase_index = 0):
+
+            #Phase shift using complex multiplication/LUTs
+            self.ptr = 0
+            self.buffsize = buff_size
+            self.phase = phase_index
+            phase_incr = numpy.arange(0, 361, 1)
+            self.coslut = numpy.cos(pi*phase_incr/180)
+            self.sinlut = numpy.sin(pi*phase_incr/180)
+            
+        #Set user defines phase in degrees
+        def set_phase(self, new_phase):
+            self.phase = new_phase
+
+        def process_frame(self, buff):
+            shift = self.coslut[self.phase] +1j*self.sinlut[self.phase]
+            buffp = shift*buff
+            return buffp
+            
+            
+    buff_len = 2048
+    buff1 = numpy.array([0]*buff_len, numpy.complex64)
+    buff2 = numpy.array([0]*buff_len, numpy.complex64)
+    
+    pi = math.pi
+    pingpong = 0
+    rqs_delay = 0
+    rqs_phase = 0
+    cbuf1 = delay(0, buff_len)
+    phase1 = phase_shift(buff_len, 0)
+    
     exit = 0
     while(1):
     
         ####ADD CODE HERE TO CHANGE CYCLE
-        hwTime = sdr.getHardwareTime()
-        #print(hwTime)
+        """ hwTime = sdr.getHardwareTime()
+        print(hwTime)
         if(hwTime==0 and hwTime != prevhwTime):
             if active[0] == 1: 
                 active[0]=2
-                #print("buffer2 active")
+                print("Buffer2 Active")
             elif active[0] == 2:
                 active[0]=1
-                #print("buffer1 active")
+                print("Buffer1 Active")
 
-
-        prevhwTime = hwTime
+        prevhwTime = hwTime """
         #####SWAP BETWEEN BUFFERS
-        
         if(buffer1[0] == 1 or buffer2[0] == 1):
             if(buffer1[0] == 1):
                 b = 1
@@ -304,47 +371,64 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                         print(name_list[i] , ": " , select_list[i])
                 print("\n") 
                 
-                buff = numpy.array([0]*1024, numpy.complex64)
-                sr_read = sdr.readStream(rx_stream, [buff], len(buff))
-                if(type1 == 2): #LimeSDR Functions, Signal Manipulations
-                    #truncating division to determine command start and end times
-                    st_time = int(select_list[2]//512000)
-                    end_time = int(select_list[3]//512000)
-
-                    tm_delay = int(select_list[4])
-                    print(tm_delay)
-                    phs_shift = int(select_list[5])
-                    #check if it is the right time to apply the command
-                    if((sr_read.timeNs//512000) == st_time)
-                        #implement commanded delay and phase at correct time     
-                        if(tm_delay > 0): #Time Delay
-                            #Create Buffer Extender with 0 values
-                            tm_delay_arry = numpy.array([0]*tm_delay, numpy.complex64)
-                            buff = np.append(tm_delay_arry, buff)
+                if(type1 != 2): #LimeSDR Functions, Signal Manipulations
+                    rqs_delay = 0
+                    rqs_phase = 0
+                else:
+                    rqs_delay = int(select_list[4])
+                    rqs_phase = int(select_list[5])
                 
-                        if(phs_shift > 0): #Phase Shift
-                            pass #ADD PHASE SHIFT CODE HERE!!
-                    elif((sr_read.timeNs//512000) == end_time)
-                        #apply phase and time delay 0 at end of effect time
-
-                sr_write = sdr.writeStream(tx_stream, [buff], len(buff))      
+                cbuf1.set_delay = rqs_delay
+                phase1.set_phase = rqs_phase
+                    
+                #Signal DSP Function Processing
+                if(pingpong == 0):
+                    sr_read = sdr.readStream(rx_stream, [buff1], len(buff1))
+                    buff1 = cbuf1.process_frame(buff1)
+                    buff1 = phase1.process_frame(buff1)
+                    sr_write = sdr.writeStream(tx_stream, [buff2], len(buff2))
+                    pingpong = 1
+                elif(pingpong == 1):
+                    sr_read = sdr.readStream(rx_stream, [buff2], len(buff2))
+                    buff2 = cbuf1.process_frame(buff2)
+                    buff2 = phase1.process_frame(buff2)
+                    sr_write = sdr.writeStream(tx_stream, [buff1], len(buff2=1))
+                    pingpong = 0
+                #End DSP Function Processing
                 
                 # Buffer Switch Logic - using timeNs -------------
-                """hwTime = sr_read.timeNs
+                hwTime = sr_read.timeNs
+                print(hwTime)
                 if(hwTime==0 and hwTime != prevhwTime):
                     if active[0] == 1: 
                         active[0]=2
                     elif active[0] == 2:
                         active[0]=1
-                prevhwTime = hwTime"""
+                prevhwTime = hwTime
+                break
                 #--------------------------------------------------
         else: #Deafult ADC/DAC pass through
-            buff = numpy.array([0]*1024, numpy.complex64)
-            sr_read = sdr.readStream(rx_stream, [buff], len(buff))
-            sr_write = sdr.writeStream(tx_stream, [buff], len(buff))
-            bufferTime = sr_read.timeNs
-            print(bufferTime)
-
+            #Signal DSP Function Processing
+            if(pingpong == 0):
+                sr_read = sdr.readStream(rx_stream, [buff1], len(buff1))
+                sr_write = sdr.writeStream(tx_stream, [buff2], len(buff2))
+                pingpong = 1
+            elif(pingpong == 1):
+                sr_read = sdr.readStream(rx_stream, [buff2], len(buff2))
+                sr_write = sdr.writeStream(tx_stream, [buff1], len(buff2=1))
+                pingpong = 0
+            #End DSP Function Processing
+                
+            # Buffer Switch Logic - using timeNs -------------
+            hwTime = sr_read.timeNs
+            print(hwTime)
+            if(hwTime==0 and hwTime != prevhwTime):
+                if active[0] == 1: 
+                    active[0]=2
+                elif active[0] == 2:
+                    active[0]=1
+            prevhwTime = hwTime
+            #--------------------------------------------------
             
         if(exit == 1):
             break
