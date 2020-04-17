@@ -226,7 +226,7 @@ def LimeSDR_Functions(buffer1, buffer2, active):
     while(1):
     
         ####ADD CODE HERE TO CHANGE CYCLE
-        """ hwTime = sdr.getHardwareTime()
+        hwTime = sdr.getHardwareTime()
         print(hwTime)
         if(hwTime==0 and hwTime != prevhwTime):
             if active[0] == 1: 
@@ -236,7 +236,7 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                 active[0]=1
                 print("Buffer1 Active")
 
-        prevhwTime = hwTime """
+        prevhwTime = hwTime
         #####SWAP BETWEEN BUFFERS
         
         if(buffer1[0] == 1 or buffer2[0] == 1):
