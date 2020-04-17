@@ -220,7 +220,7 @@ def LimeSDR_Functions(buffer1, buffer2, active):
     #--------------------------------------------------------
 
     #create a re-usable buffer for rx samples
-    buff_len = 1024
+    buff_len = 2048
     #buff = numpy.array([0]*1024, numpy.complex64)
     #print("\nBuffer Length:", len(buff), "\n")
     prevhwTime = 0
@@ -296,7 +296,7 @@ def LimeSDR_Functions(buffer1, buffer2, active):
     buff2 = numpy.array([0]*buff_len, numpy.complex64)
     
     pi = math.pi
-    pingpong = 0
+    #pingpong = 0
     rqs_delay = 0
     rqs_phase = 0
     cbuf1 = delay(0, buff_len)
@@ -383,18 +383,18 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                 phase1.set_phase = rqs_phase
                     
                 #Signal DSP Function Processing
-                if(pingpong == 0):
+                #if(pingpong == 0):
                     sr_read = sdr.readStream(rx_stream, [buff1], len(buff1))
                     buff1 = cbuf1.process_frame(buff1)
                     buff1 = phase1.process_frame(buff1)
-                    sr_write = sdr.writeStream(tx_stream, [buff2], len(buff2))
-                    pingpong = 1
-                elif(pingpong == 1):
-                    sr_read = sdr.readStream(rx_stream, [buff2], len(buff2))
-                    buff2 = cbuf1.process_frame(buff2)
-                    buff2 = phase1.process_frame(buff2)
-                    sr_write = sdr.writeStream(tx_stream, [buff1], len(buff2))
-                    pingpong = 0
+                    #sr_write = sdr.writeStream(tx_stream, [buff2], len(buff2))
+                    #pingpong = 1
+                #elif(pingpong == 1):
+                    #sr_read = sdr.readStream(rx_stream, [buff2], len(buff2))
+                    #buff2 = cbuf1.process_frame(buff2)
+                    #buff2 = phase1.process_frame(buff2)
+                    sr_write = sdr.writeStream(tx_stream, [buff1], len(buff1))
+                    #pingpong = 0
                 #End DSP Function Processing
                 
                 # Buffer Switch Logic - using timeNs -------------
@@ -410,14 +410,14 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                 #--------------------------------------------------
         else: #Deafult ADC/DAC pass through
             #Signal DSP Function Processing
-            if(pingpong == 0):
+            #if(pingpong == 0):
                 sr_read = sdr.readStream(rx_stream, [buff1], len(buff1))
-                sr_write = sdr.writeStream(tx_stream, [buff2], len(buff2))
-                pingpong = 1
-            elif(pingpong == 1):
-                sr_read = sdr.readStream(rx_stream, [buff2], len(buff2))
-                sr_write = sdr.writeStream(tx_stream, [buff1], len(buff2))
-                pingpong = 0
+                #sr_write = sdr.writeStream(tx_stream, [buff2], len(buff2))
+                #pingpong = 1
+            #elif(pingpong == 1):
+                #sr_read = sdr.readStream(rx_stream, [buff2], len(buff2))
+                sr_write = sdr.writeStream(tx_stream, [buff1], len(buff1))
+                #pingpong = 0
             #End DSP Function Processing
                 
             # Buffer Switch Logic - using timeNs -------------
