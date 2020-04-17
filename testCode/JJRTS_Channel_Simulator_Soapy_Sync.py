@@ -220,7 +220,7 @@ def LimeSDR_Functions(buffer1, buffer2, active):
     #--------------------------------------------------------
 
     #create a re-usable buffer for rx samples
-    buff_len = 2048
+    buff_len = 1024
     #buff = numpy.array([0]*1024, numpy.complex64)
     #print("\nBuffer Length:", len(buff), "\n")
     prevhwTime = 0
@@ -271,7 +271,7 @@ def LimeSDR_Functions(buffer1, buffer2, active):
     class phase_shift(object): 
 
         #initialize object
-        def __init__(self, buff_size = 4096, phase_index = 0):
+        def __init__(self, buff_size = buff_len, phase_index = 0):
 
             #Phase shift using complex multiplication/LUTs
             self.ptr = 0
@@ -378,8 +378,8 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                 buff1 = numpy.array([0]*buff_len, numpy.complex64)
                 #buff2 = numpy.array([0]*buff_len, numpy.complex64)
                 
-                cbuf1.set_delay = rqs_delay
-                phase1.set_phase = rqs_phase
+                cbuf1.set_delay(rqs_delay)
+                phase1.set_phase(rqs_phase)
                     
                 #Signal DSP Function Processing
                 #if(pingpong == 0):
