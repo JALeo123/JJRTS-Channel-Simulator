@@ -290,10 +290,6 @@ def LimeSDR_Functions(buffer1, buffer2, active):
             buffp = shift*buff
             return buffp
             
-            
-    #buff_len = 2048
-    buff1 = numpy.array([0]*buff_len, numpy.complex64)
-    buff2 = numpy.array([0]*buff_len, numpy.complex64)
     
     pi = math.pi
     #pingpong = 0
@@ -378,22 +374,25 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                 else:
                     rqs_delay = int(select_list[4])
                     rqs_phase = int(select_list[5])
+                    
+                buff1 = numpy.array([0]*buff_len, numpy.complex64)
+                #buff2 = numpy.array([0]*buff_len, numpy.complex64)
                 
                 cbuf1.set_delay = rqs_delay
                 phase1.set_phase = rqs_phase
                     
                 #Signal DSP Function Processing
                 #if(pingpong == 0):
-                    sr_read = sdr.readStream(rx_stream, [buff1], len(buff1))
-                    buff1 = cbuf1.process_frame(buff1)
-                    buff1 = phase1.process_frame(buff1)
+                sr_read = sdr.readStream(rx_stream, [buff1], len(buff1))
+                buff1 = cbuf1.process_frame(buff1)
+                buff1 = phase1.process_frame(buff1)
                     #sr_write = sdr.writeStream(tx_stream, [buff2], len(buff2))
                     #pingpong = 1
                 #elif(pingpong == 1):
                     #sr_read = sdr.readStream(rx_stream, [buff2], len(buff2))
                     #buff2 = cbuf1.process_frame(buff2)
                     #buff2 = phase1.process_frame(buff2)
-                    sr_write = sdr.writeStream(tx_stream, [buff1], len(buff1))
+                sr_write = sdr.writeStream(tx_stream, [buff1], len(buff1))
                     #pingpong = 0
                 #End DSP Function Processing
                 
@@ -410,13 +409,16 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                 #--------------------------------------------------
         else: #Deafult ADC/DAC pass through
             #Signal DSP Function Processing
+            #buff_len = 2048
+            buff1 = numpy.array([0]*buff_len, numpy.complex64)
+            #buff2 = numpy.array([0]*buff_len, numpy.complex64)
             #if(pingpong == 0):
-                sr_read = sdr.readStream(rx_stream, [buff1], len(buff1))
+            sr_read = sdr.readStream(rx_stream, [buff1], len(buff1))
                 #sr_write = sdr.writeStream(tx_stream, [buff2], len(buff2))
                 #pingpong = 1
             #elif(pingpong == 1):
                 #sr_read = sdr.readStream(rx_stream, [buff2], len(buff2))
-                sr_write = sdr.writeStream(tx_stream, [buff1], len(buff1))
+            sr_write = sdr.writeStream(tx_stream, [buff1], len(buff1))
                 #pingpong = 0
             #End DSP Function Processing
                 
