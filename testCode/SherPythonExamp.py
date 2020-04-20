@@ -19,8 +19,8 @@ freqs = sdr.getFrequencyRange(SOAPY_SDR_RX, 0)
 for freqRange in freqs: print(freqRange)
 
 #apply settings
-sdr.setSampleRate(SOAPY_SDR_RX, 0, 30e6)
-sdr.setFrequency(SOAPY_SDR_RX, 0, 868e6)
+sdr.setSampleRate(SOAPY_SDR_RX, 0, 20e6)
+sdr.setFrequency(SOAPY_SDR_RX, 0, 70e6)
 
 #setup a stream (complex floats)
 rxStream = sdr.setupStream(SOAPY_SDR_RX, SOAPY_SDR_CF32)
@@ -29,7 +29,7 @@ sdr.activateStream(rxStream) #start streaming
 
 #create a re-usable buffer for rx samples
 buff = numpy.array([0]*1024, numpy.complex64)
-
+sdr.setHardwareTime(0)
 #receive some samples
 for i in range(10000):
     y = sdr.getHardwareTime()
@@ -38,12 +38,14 @@ for i in range(10000):
     #print(sr.flags) #flags set by receive operation
     #print(sr.timeNs) #timestamp for receive buffer
     
+    
 #sdr.setHardwareTime(0)
 
+
 while(1):
-    time.sleep(.0001)
     y = sdr.getHardwareTime()
     print(y)
+
 
     
 
