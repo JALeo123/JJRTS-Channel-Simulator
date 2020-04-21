@@ -17,11 +17,11 @@ hm_list_bytes = [4,4,4,8,4,4,4] #4=int, 8=8byteFloat, 5=4byteFloat
 
 #Beam Steer Command (2)
 Action_ID = 1234       #Byte Length = 4, Type INT
-Start_Action_Tm = 2345  #Byte Length = 4, Type INT
+Start_Action_Tm = 29580000  #Byte Length = 4, Type INT
 Stop_Action_Tm = 3456   #Byte Length = 4, Type INT
 Pulse_Type = 2          #Byte Length = 4, Type ENUM
 Time_Delay = 5678       #Byte Length = 4, Type INT
-Phase_Adj = 6789        #Byte Length = 4, Type INT
+Phase_Adj = 90        #Byte Length = 4, Type INT
 Ampl_Adj = 7890         #Byte Length = 4, Type FLOAT
 bsc_list = [int(Action_ID),int(Start_Action_Tm),int(Stop_Action_Tm),
             int(Pulse_Type),int(Time_Delay),int(Phase_Adj),
@@ -38,7 +38,7 @@ ssr_list = [int(Operability),int(Status_1),int(Status_2),
             int(Status_3),int(Status_4)]
 ssr_list_bytes = [4,4,4,4,4]
 
-msgType = -1
+msgType = 2
 message = struct.pack('i', msgType)
 select_list = []
 select_list_bytes = []
@@ -59,7 +59,7 @@ for i in range(len(select_list_bytes)):
     elif(select_list_bytes[i] == 8):
         message = message + struct.pack('d', select_list[i])
 
-serverAddressPort = ("10.0.0.182", 20001)
+serverAddressPort = ("169.254.102.212", 20001)
 
 #Create a UDP socket at client side
 UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
