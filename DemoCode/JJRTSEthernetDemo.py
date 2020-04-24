@@ -429,7 +429,6 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                 
             # Buffer Switch Logic - using timeNs -------------
             hwTime = sr_read.timeNs
-            print(hwTime)
             if(hwTime < prevhwTime):
                 if active[0] == 1: 
                     active[0]=2
