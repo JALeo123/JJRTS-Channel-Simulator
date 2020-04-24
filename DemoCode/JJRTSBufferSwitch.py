@@ -220,7 +220,7 @@ def LimeSDR_Functions(buffer1, buffer2, active):
     #--------------------------------------------------------
 
     #create a re-usable buffer for rx samples
-    buff_len = 512
+    buff_len = 1024
     #buff = numpy.array([0]*1024, numpy.complex64)
     #print("\nBuffer Length:", len(buff), "\n")
     prevhwTime = 0
@@ -433,8 +433,10 @@ def LimeSDR_Functions(buffer1, buffer2, active):
             if(hwTime < prevhwTime):
                 if active[0] == 1: 
                     active[0]=2
+                    print("Buffer2 Active")
                 elif active[0] == 2:
                     active[0]=1
+                    print("Buffer1 Active")
             prevhwTime = hwTime
 
             #--------------------------------------------------
