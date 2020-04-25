@@ -183,7 +183,7 @@ def LimeSDR_Functions(buffer1, buffer2, active):
     #TBD
 
     #Set Sampling Rate
-    smp_rate = 2e6
+    smp_rate = 2.5e6
     sdr.setSampleRate(SOAPY_SDR_RX, 0, smp_rate)
     print("Receiver Sampling Rate:", sdr.getSampleRate(SOAPY_SDR_RX, 0))
     sdr.setSampleRate(SOAPY_SDR_TX, 0, smp_rate)
@@ -220,7 +220,7 @@ def LimeSDR_Functions(buffer1, buffer2, active):
     #--------------------------------------------------------
 
     #create a re-usable buffer for rx samples
-    buff_len = 512
+    buff_len = 1024
     #buff = numpy.array([0]*1024, numpy.complex64)
     #print("\nBuffer Length:", len(buff), "\n")
     prevhwTime = 0
@@ -375,8 +375,8 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                 else:
                     rqs_delay = int(select_list[4])
                     rqs_phase = int(select_list[5])
-                    rqs_start = int(select_list[1])//1020000
-                    rqs_end = int(select_list[2])//1020000
+                    rqs_start = int(select_list[1])//816000
+                    rqs_end = int(select_list[2])//816000
                     
                 buff1 = numpy.array([0]*buff_len, numpy.complex64)
                 buff2 = numpy.array([0]*buff_len, numpy.complex64)
@@ -387,7 +387,7 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                 #Signal DSP Function Processing
                 if(pingpong == 0):
                     sr_read = sdr.readStream(rx_stream, [buff1], len(buff1))
-                    if(sr_read.timeNs//1020000 == rqs_start//1020000):
+                    if(sr_read.timeNs//816000 == rqs_start):
                         buff1 = cbuf1.process_frame(buff1)
                         buff1 = phase1.process_frame(buff1)
                     
