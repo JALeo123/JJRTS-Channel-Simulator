@@ -17,15 +17,40 @@ hm_list_bytes = [4,4,4,8,4,4,4] #4=int, 8=8byteFloat, 5=4byteFloat
 
 #Beam Steer Command (2)
 
-#Test 1
+#Test 1 - Single Beam Steer Command
+Action_ID = [1,2,3,4,5,6,7,8,9,10]       #Byte Length = 4, Type INT
+Start_Action_Tm1 = [7140000,11220000,18360000,23460000,27540000,30600000,33660000,35700000,43860000,48960000]   #Byte Length = 4, Type INT
+Stop_Action_Tm1 = [39780000,40800000,41820000,42840000,43860000,44880000,45900000,46920000,47940000,48960000]   #Byte Length = 4, Type INT
+Pulse_Type1 = [1,2,3,4,5,6,7,8,9,10]          #Byte Length = 4, Type ENUM
+Time_Delay1 = [1,   #Byte Length = 4, Type INT
+Phase_Adj1 = [0,35,67,90,129,180,225,280,300,345]      #Byte Length = 4, Type INT
+Ampl_Adj1 = 7890         #Byte Length = 4, Type FLO]AT
+bsc_list1 = [int(Action_ID),int(Start_Action_Tm),int(Stop_Action_Tm),
+            int(Pulse_Type),int(Time_Delay),int(Phase_Adj),
+            float(Ampl_Adj)]
+bsc_list_bytes = [4,4,4,4,4,4,5]
+
+#Test 2 - Two Beam Steer Commands in one time interval
 Action_ID = 1234       #Byte Length = 4, Type INT
-Start_Action_Tm = 29580000  #Byte Length = 4, Type INT
-Stop_Action_Tm = 3456   #Byte Length = 4, Type INT
-Pulse_Type = 2          #Byte Length = 4, Type ENUM
-Time_Delay = 5678       #Byte Length = 4, Type INT
-Phase_Adj = 90        #Byte Length = 4, Type INT
-Ampl_Adj = 7890         #Byte Length = 4, Type FLOAT
-bsc_list = [int(Action_ID),int(Start_Action_Tm),int(Stop_Action_Tm),
+Start_Action_Tm2 = 29580000  #Byte Length = 4, Type INT
+Stop_Action_Tm2 = 3456   #Byte Length = 4, Type INT
+Pulse_Type2 = 2          #Byte Length = 4, Type ENUM
+Time_Delay2 = 5678       #Byte Length = 4, Type INT
+Phase_Adj2 = 90        #Byte Length = 4, Type INT
+Ampl_Adj2 = 7890         #Byte Length = 4, Type FLOAT
+bsc_list2 = [int(Action_ID),int(Start_Action_Tm),int(Stop_Action_Tm),
+            int(Pulse_Type),int(Time_Delay),int(Phase_Adj),
+            float(Ampl_Adj)]
+bsc_list_bytes = [4,4,4,4,4,4,5]
+
+Action_ID3 = 1234       #Byte Length = 4, Type INT
+Start_Action_Tm3 = 29580000  #Byte Length = 4, Type INT
+Stop_Action_Tm3 = 3456   #Byte Length = 4, Type INT
+Pulse_Type3 = 2          #Byte Length = 4, Type ENUM
+Time_Delay3 = 5678       #Byte Length = 4, Type INT
+Phase_Adj3 = 90        #Byte Length = 4, Type INT
+Ampl_Adj3 = 7890         #Byte Length = 4, Type FLOAT
+bsc_list3 = [int(Action_ID),int(Start_Action_Tm),int(Stop_Action_Tm),
             int(Pulse_Type),int(Time_Delay),int(Phase_Adj),
             float(Ampl_Adj)]
 bsc_list_bytes = [4,4,4,4,4,4,5]
