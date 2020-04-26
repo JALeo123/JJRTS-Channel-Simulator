@@ -70,7 +70,7 @@ def Ethernet_Recieve(buffer1, buffer2, active):
                     "Status_3","Status_4"]
        
        
-    print_info = 0
+    print_info = 1
     
     buffer_struct_master = [0, hm_list, hm_list_nm, bsc_list, bsc_list_nm, ssr_list, ssr_list_nm] #First var is message type
     
@@ -99,6 +99,7 @@ def Ethernet_Recieve(buffer1, buffer2, active):
         name_list = []
         bytesAddressPair = UDPServerSocket.recvfrom(bufferSize)
         message = bytesAddressPair[0]
+        print(message)
         address = bytesAddressPair[1]
 
         rawclientMsg = "Raw Message: {}".format(message)
@@ -109,19 +110,21 @@ def Ethernet_Recieve(buffer1, buffer2, active):
         buffer_struct[0] = type1
 
         if(type1 == 1 or type1 == -1):
-            select_list = hm_list
+            select_list = hm_list.copy()
             select_listInfo = hm_list.copy()
-            name_list = hm_list_nm
+            name_list = hm_list_nm.copy()
         if(type1 == 2):
-            select_list = bsc_list
+            select_list = bsc_list.copy()
             select_listInfo = bsc_list.copy()
-            name_list = bsc_list_nm
+            name_list = bsc_list_nm.copy()
         if(type1 == 3):
-            select_list = ssr_list
+            select_list = ssr_list.copy()
             select_listInfo = ssr_list.copy()
-            name_list = ssr_list_nm
+            name_list = ssr_list_nm.copy()
+        print("hello")
            
         #Split Message Bytes
+        #PROBLEM HERE
         r = 4
         for i in range(len(select_listInfo)):
             tmp = select_listInfo[i]
@@ -167,7 +170,7 @@ def Ethernet_Recieve(buffer1, buffer2, active):
 
 
 def LimeSDR_Functions(buffer1, buffer2, active):
-    print_info = 1
+    print_info = 0
 
     #enumerate devices
     results = SoapySDR.Device.enumerate()
@@ -372,6 +375,8 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                 if(type1 != 2): #LimeSDR Functions, Signal Manipulations
                     rqs_delay = 0
                     rqs_phase = 0
+                    rqs_start = 0
+                    rqs_end = 0
                 else:
                     rqs_delay = int(select_list[4])
                     rqs_phase = int(select_list[5])
@@ -387,7 +392,7 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                 #Signal DSP Function Processing
                 if(pingpong == 0):
                     sr_read = sdr.readStream(rx_stream, [buff1], len(buff1))
-                    if(sr_read.timeNs//816000 == rqs_start:
+                    if(sr_read.timeNs//816000 == rqs_start):
                         buff1 = cbuf1.process_frame(buff1)
                         buff1 = phase1.process_frame(buff1)
                     
