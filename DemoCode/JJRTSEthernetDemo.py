@@ -99,7 +99,7 @@ def Ethernet_Recieve(buffer1, buffer2, active):
         name_list = []
         bytesAddressPair = UDPServerSocket.recvfrom(bufferSize)
         message = bytesAddressPair[0]
-        print(message)
+        #print(message)
         address = bytesAddressPair[1]
 
         rawclientMsg = "Raw Message: {}".format(message)
@@ -121,7 +121,7 @@ def Ethernet_Recieve(buffer1, buffer2, active):
             select_list = ssr_list.copy()
             select_listInfo = ssr_list.copy()
             name_list = ssr_list_nm.copy()
-        print("hello")
+        #print("hello")
            
         #Split Message Bytes
         #PROBLEM HERE

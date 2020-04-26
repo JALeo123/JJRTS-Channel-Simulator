@@ -153,8 +153,10 @@ def Ethernet_Recieve(buffer1, buffer2, active):
         #change active buffer
         if (active_buffer == 1 and active[0] == 2):
             buffer1[0] = 1 #Set buffer to active
+            buffer2[0] = 0
             active_buffer = active[0]
         elif(active_buffer == 2 and active[0] == 1):
+            buffer1[0] = 0
             buffer2[0] = 1 #Set buffer to active
             active_buffer = active[0]
             
@@ -163,7 +165,9 @@ def Ethernet_Recieve(buffer1, buffer2, active):
             print("Exit Command: Ethernet Thread Exiting")
             if (active_buffer == 1):
                 buffer1[0] = 1 #Set buffer to active
+                buffer2[0] = 0
             elif(active_buffer == 2):
+                buffer1[0] = 0
                 buffer2[0] = 1 #Set buffer to active
             break
     UDPServerSocket.close()
@@ -323,15 +327,15 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                 b = 1
                 #buffer1[0] = 0
                 buffer_struct = buffer1.copy()
-                buffer1.clear()
-                buffer1.append(0)
+                #buffer1.clear()
+                #buffer1.append(0)
             elif(buffer2[0] == 1):
                 b = 2
                 #buffer2[0] = 0
                 buffer_struct = buffer2.copy()
-                buffer2.clear()
-                buffer2.append(0)
-            print("Buffer", str(b)," active!")
+                #buffer2.clear()
+                #buffer2.append(0)
+            #print("Buffer", str(b)," active!")
 
             for i in range(1,len(buffer_struct)):
                 buffer = buffer_struct[i]

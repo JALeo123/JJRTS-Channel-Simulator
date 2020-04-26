@@ -70,7 +70,7 @@ def Ethernet_Recieve(buffer1, buffer2, active):
                     "Status_3","Status_4"]
        
        
-    print_info = 1
+    print_info = 0
     
     buffer_struct_master = [0, hm_list, hm_list_nm, bsc_list, bsc_list_nm, ssr_list, ssr_list_nm] #First var is message type
     
@@ -99,7 +99,7 @@ def Ethernet_Recieve(buffer1, buffer2, active):
         name_list = []
         bytesAddressPair = UDPServerSocket.recvfrom(bufferSize)
         message = bytesAddressPair[0]
-        print(message)
+        #print(message)
         address = bytesAddressPair[1]
 
         rawclientMsg = "Raw Message: {}".format(message)
@@ -121,7 +121,7 @@ def Ethernet_Recieve(buffer1, buffer2, active):
             select_list = ssr_list.copy()
             select_listInfo = ssr_list.copy()
             name_list = ssr_list_nm.copy()
-        print("hello")
+
            
         #Split Message Bytes
         #PROBLEM HERE
@@ -143,7 +143,7 @@ def Ethernet_Recieve(buffer1, buffer2, active):
             for i in range(len(name_list)):
                 print(name_list[i] , ": " , select_list[i])
                 
-            print("\n")
+            #print("\n")
             
         if (active_buffer == 1):
             buffer1.append(buffer_struct)
@@ -153,8 +153,12 @@ def Ethernet_Recieve(buffer1, buffer2, active):
         #change active buffer
         if (active_buffer == 1 and active[0] == 2):
             buffer1[0] = 1 #Set buffer to active
+            #buffer2.clear()
+            #buffer2.append(0)
             active_buffer = active[0]
         elif(active_buffer == 2 and active[0] == 1):
+            #buffer1.clear()
+            #buffer1.append(0)
             buffer2[0] = 1 #Set buffer to active
             active_buffer = active[0]
             
@@ -163,7 +167,11 @@ def Ethernet_Recieve(buffer1, buffer2, active):
             print("Exit Command: Ethernet Thread Exiting")
             if (active_buffer == 1):
                 buffer1[0] = 1 #Set buffer to active
+                #buffer2.clear()
+                #buffer2.append(0)
             elif(active_buffer == 2):
+                #buffer1.clear()
+                #buffer1.append(0)
                 buffer2[0] = 1 #Set buffer to active
             break
     UDPServerSocket.close()
@@ -293,32 +301,29 @@ def LimeSDR_Functions(buffer1, buffer2, active):
             buffp = shift*buff
             return buffp
             
+    type1=[]
+    hm_list=[]
+    hm_list_nm=[]
+    bsc_list=[]
+    bsc_list_nm=[]
+    ssr_list=[]
+    ssr_list_nm=[]
+    select_list=[]
+    name_list=[]
     
     pi = math.pi
     pingpong = 0
-    rqs_delay = 0
-    rqs_phase = 0
-    cbuf1 = delay(0, buff_len)
-    phase1 = phase_shift(buff_len, 0)
+    rqs_delay = []
+    rqs_phase = []
+    rqs_start = []
+    rqs_end = []
+    cbuf1 = []
+    phase1 = []
     
     exit = 0
     while(1):
-        """
-        ####ADD CODE HERE TO CHANGE CYCLE
-        hwTime = sdr.getHardwareTime()
-        #print(hwTime)
-        if(hwTime < prevhwTime):
-            if active[0] == 1: 
-                active[0]=2
-                #print("Buffer2 Active")
-            elif active[0] == 2:
-                active[0]=1
-                #print("Buffer1 Active")
-
-        prevhwTime = hwTime 
-        """
-        #####SWAP BETWEEN BUFFERS
         if(buffer1[0] == 1 or buffer2[0] == 1):
+            
             if(buffer1[0] == 1):
                 b = 1
                 #buffer1[0] = 0
@@ -332,26 +337,32 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                 buffer2.clear()
                 buffer2.append(0)
             print("Buffer", str(b)," active!")
-
-            for i in range(1,len(buffer_struct)):
-                buffer = buffer_struct[i]
-                type1 = buffer[0]
-                hm_list = buffer[1]
-                hm_list_nm = buffer[2]
-                bsc_list = buffer[3]
-                bsc_list_nm = buffer[4]
-                ssr_list = buffer[5]
-                ssr_list_nm = buffer[6]
-                if(type1 == 1):
-                    select_list = hm_list.copy()
-                    name_list = hm_list_nm
-                if(type1 == 2):
-                    select_list = bsc_list.copy()
-                    name_list = bsc_list_nm
-                if(type1 == 3):
-                    select_list = ssr_list.copy()
-                    name_list = ssr_list_nm
-                if(type1 == -1):
+            
+            #fill the lists with all ethernet commands recieved
+            for i in range(0,len(buffer_struct)-1):
+                cbuf1.append(delay(0, buff_len))
+                phase1.append(phase_shift(buff_len, 0))
+                
+                buffer = buffer_struct[i+1]
+                type1.append(buffer[0])
+                hm_list.append(buffer[1])
+                hm_list_nm.append(buffer[2])
+                bsc_list.append(buffer[3])
+                print(bsc_list)
+                bsc_list_nm.append(buffer[4])
+                ssr_list.append(buffer[5])
+                ssr_list_nm.append(buffer[6])
+                if(type1[i]== 1):
+                    select_list.append(hm_list[i].copy())
+                    name_list.append(hm_list_nm[i])
+                if(type1[i] == 2):
+                    select_list.append(bsc_list[i].copy())
+                    name_list.append(bsc_list_nm[i])
+                    print(select_list)
+                if(type1[i] == 3):
+                    select_list.append(ssr_list[i].copy())
+                    name_list.append(ssr_list_nm[i])
+                if(type1[i] == -1):
                     print("Exit Command: LimeSDR Thread Exiting")
                     exit = 1
                     break
@@ -363,48 +374,43 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                                 "128 usec/1MH LFM","250 usec/100kHz LFM","250 usec/1MHz LFM"]
                 operability = ["Green","White","Yellow","Red"]
                 if(type1 == 2):
-                    select_list[3] = pulse_type[select_list[3]]
+                    select_list[i][3] = pulse_type[select_list[i][3]]
                 if(type1 == 3):
-                    select_list[0] = operability[select_list[0]]
+                    select_list[i][0] = operability[select_list[i][0]]
                     
                 if (print_info == 1): #Print Incoming Buffer
-                    for i in range(len(name_list)):
-                        print(name_list[i] , ": " , select_list[i])
-                print("\n") 
+                    for j in range(len(name_list)):
+                        print(name_list[i][j] , ": " , select_list[i][j])
+                #print("\n") 
                 
                 if(type1 != 2): #LimeSDR Functions, Signal Manipulations
-                    rqs_delay = 0
-                    rqs_phase = 0
-                    rqs_start = 0
-                    rqs_end = 0
+                    rqs_delay.append(0)
+                    rqs_phase.append(0)
+                    rqs_start.append(0)
+                    rqs_end.append(0)
                 else:
-                    rqs_delay = int(select_list[4])
-                    rqs_phase = int(select_list[5])
-                    rqs_start = int(select_list[1])//816000
-                    rqs_end = int(select_list[2])//816000
+                    rqs_delay.append(int(select_list[i][4]))
+                    rqs_phase.append(int(select_list[i][5]))
+                    rqs_start.append(int(select_list[i][1])//816000)
+                    rqs_end.append(int(select_list[i][2])//816000)
+                    print(rqs_delay,rqs_phase,rqs_start,rqs_end)
                     
-                buff1 = numpy.array([0]*buff_len, numpy.complex64)
-                buff2 = numpy.array([0]*buff_len, numpy.complex64)
-                print(rqs_delay,rqs_phase,rqs_start,rqs_end)
-                cbuf1.set_delay(rqs_delay)
-                phase1.set_phase(rqs_phase)
-                    
+                #print(rqs_delay,rqs_phase,rqs_start,rqs_end)
+                cbuf1[i].set_delay(rqs_delay[i])
+                phase1[i].set_phase(rqs_phase[i])
+            
                 #Signal DSP Function Processing
                 if(pingpong == 0):
                     sr_read = sdr.readStream(rx_stream, [buff1], len(buff1))
-                    if(sr_read.timeNs//816000 == rqs_start):
-                        buff1 = cbuf1.process_frame(buff1)
-                        buff1 = phase1.process_frame(buff1)
-                    
                     sr_write = sdr.writeStream(tx_stream, [buff2], len(buff2))
                     pingpong = 1
                 elif(pingpong == 1):
                     sr_read = sdr.readStream(rx_stream, [buff2], len(buff2))
-                    buff2 = cbuf1.process_frame(buff2)
-                    buff2 = phase1.process_frame(buff2)
                     sr_write = sdr.writeStream(tx_stream, [buff1], len(buff1))
+                    
                     pingpong = 0
                 #End DSP Function Processing
+                
                 
                 # Buffer Switch Logic - using timeNs -------------
                 
@@ -417,6 +423,7 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                 prevhwTime = hwTime
                 break
                 #--------------------------------------------------
+
         else: #Deafult ADC/DAC pass through
             #Signal DSP Function Processing
             #buff_len = 2048
@@ -424,16 +431,40 @@ def LimeSDR_Functions(buffer1, buffer2, active):
             buff2 = numpy.array([0]*buff_len, numpy.complex64)
             if(pingpong == 0):
                 sr_read = sdr.readStream(rx_stream, [buff1], len(buff1))
+                msTime = sr_read.timeNs//816000
+                if(rqs_start != []):
+                    if(msTime >= rqs_start[0] and msTime <= rqs_end[0]):
+                        buff1 = cbuf1[0].process_frame(buff1)
+                        buff1 = phase1[0].process_frame(buff1)
+                            #are there more commands to process
+                        if(len(rqs_start) > 1):
+                            if(msTime >= rqs_start[1]):
+                                cbuf1.pop()
+                                phase1.pop()
+                                rqs_start.pop()
+                                rqs_end.pop()
                 sr_write = sdr.writeStream(tx_stream, [buff2], len(buff2))
                 pingpong = 1
             elif(pingpong == 1):
                 sr_read = sdr.readStream(rx_stream, [buff2], len(buff2))
+                if(rqs_start != []):
+                    if(msTime >= rqs_start[0] and msTime <= rqs_end[0]):
+                        buff1 = cbuf1[0].process_frame(buff2)
+                        buff1 = phase1[0].process_frame(buff2)
+                        #are there more commands to process
+                        if(len(rqs_start) > 1):
+                            if(msTime >= rqs_start[1]):
+                                cbuf1.pop()
+                                phase1.pop()
+                                rqs_start.pop()
+                                rqs_end.pop()
                 sr_write = sdr.writeStream(tx_stream, [buff1], len(buff1))
                 pingpong = 0
             #End DSP Function Processing
                 
             # Buffer Switch Logic - using timeNs -------------
             hwTime = sr_read.timeNs
+            #print(hwTime//816000)
             if(hwTime < prevhwTime):
                 if active[0] == 1: 
                     active[0]=2
