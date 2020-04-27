@@ -70,43 +70,40 @@ sdr.activateStream(rx_stream)#, numElems = len(buff1))
 print("Activation Complete")
 time.sleep(1)
 
-#Create class to initialize DSP class
+#Create class 
 class time_delay(object):
-   
-    def __init__ (self, delay_samps = 0, Nbuffer_len = 2048):
+    """
+    
+    A Class that implements time delay
+    
+    """
+    
+    def __init__ (self, delay_samps = 0, Nbuffer_len = 1024):
         """
         Initialize the object
         """
+        
         self.delay = delay_samps
         self.Nbuf = Nbuffer_len
-        self.ping = numpy.zeros(Nbuffer_len, numpy.complex64)
-        self.pong = numpy.zeros(Nbuffer_len, numpy.complex64)
+        self.p = numpy.zeros(self.Nbuf, numpy.complex64)
         
     def set_delay(self,new_delay):
         self.delay = new_delay
-    
+        self.delta = self.Nbuf - self.delay 
+        
+        ""
     def process_frame(self,x):
         """
         Process a frame of samples
         """
-        global pingpong, myIterator
-        NFrame = len(x)
-        y = numpy.zeros(NFrame, numpy.complex64)
-        p = numpy.zeros(NFrame, numpy.complex64)
-        pingpong = next(myIterator)
         
-        if pingpong == 0:
-            self.ping = x
-            p = numpy.resize(numpy.roll(self.pong, self.delay), (1, self.delay))
-            y = numpy.append(p, numpy.resize(x, (1, len(x) - self.delay)))   
-        else: 
-            self.pong = x
-            p = numpy.resize(numpy.roll(self.ping, self.delay), (1, self.delay))
-            y = numpy.append(p, numpy.resize(x, (1, len(x) - self.delay)))
-            
-        return y
+        y = numpy.append(self.p[self.delta:self.Nbuf], x[:self.delta])
+        self.p = x
 
-#Create class to initialize DSP class
+        return y   
+              
+
+#Create class 
 class phase_shift(object): 
 
 	#initialize object
@@ -116,11 +113,13 @@ class phase_shift(object):
 		self.ptr = 0
 		self.buffsize = buff_size
 		self.phase = phase_index
+
+        #LUTs for complex multiply
 		phase_incr = numpy.arange(0, 361, 1)
 		self.coslut = numpy.cos(pi*phase_incr/180)
 		self.sinlut = numpy.sin(pi*phase_incr/180)
 		
-	#Set user defines phase in degrees
+	#User defines phase in degrees
 	def set_phase(self, new_phase):
 		self.phase = new_phase
 
@@ -140,9 +139,6 @@ td1 = time_delay(0, buff_len)
 phase1 = phase_shift(buff_len, 0)
 keep_streaming = True
 
-#Globals used for time delay
-pingpong = 0
-myIterator = cycle(range(2))
 
 #infinite loop - break by changing keep_streaming = False
 while(keep_streaming):

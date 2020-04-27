@@ -246,33 +246,40 @@ def LimeSDR_Functions(buffer1, buffer2, active):
     time.sleep(1)
     
     #Create class to initialize DSP object and such
-    class delay(object): 
-        #initialize object
-        def __init__(self, delay_samps = 0, buff_size = buff_len, phase_index = 0):
-            # Time delay using circular buffer
+    class time_delay(object):
+        """
+        
+        A Class that implements time delay
+        
+        """
+        
+        def __init__ (self, delay_samps = 0, Nbuffer_len = 1024):
+            """
+            Initialize the object
+            """
+            
             self.delay = delay_samps
-            self.ptr = 0
-            self.buffsize = buff_size
-            self.cirbuff = numpy.array([0]*buff_size, numpy.complex64)
-
-        #Set user defines delay
-        def set_delay(self, new_delay):
+            self.Nbuf = Nbuffer_len
+            self.prev = numpy.zeros(self.Nbuf, numpy.complex64)
+            
+        def set_delay(self,new_delay):
             self.delay = new_delay
+            self.delta = self.Nbuf - self.delay 
+            
+            ""
+        def process_frame(self,x):
+            """
+            Process a frame of samples
+            Previous data is appended via self.prev
+            self.delta sizes the prev buffer based on the currently requested delay
+            x is sized such that it is "rolled" by a certain number of sample spaces
+            """
+            
+            y = numpy.append(self.prev[self.delta:self.Nbuf], x[:self.delta])
+            self.prev = x
 
-        def process_sample(self, buff):
-            self.cirbuff[self.ptr] = buff
-            buffd = self.cirbuff[(self.ptr - self.delay) % self.buffsize]
-            self.ptr = (self.ptr + 1) % self.buffsize
-
-            return buffd
-
-        def process_frame(self, buff):
-            Nframe = len(buff)
-            buffd = numpy.array([0]*Nframe, numpy.complex64)
-            for k in range(Nframe):
-                buffd[k] = self.process_sample(buff[k])
-
-            return buffd
+            return y   
+              
 
     #Create class to initialize DSP object and such
     class phase_shift(object): 
@@ -293,7 +300,7 @@ def LimeSDR_Functions(buffer1, buffer2, active):
             self.phase = new_phase
 
         def process_frame(self, buff):
-            shift = self.coslut[self.phase] +1j*self.sinlut[self.phase]
+            shift = self.coslut[self.phase] - 1j*self.sinlut[self.phase]
             buffp = shift*buff
             return buffp
             
@@ -302,8 +309,8 @@ def LimeSDR_Functions(buffer1, buffer2, active):
     pingpong = 0
     rqs_delay = 0
     rqs_phase = 0
-    cbuf1 = delay(0, buff_len)
-    phase1 = phase_shift(buff_len, 0)
+    td = time_delay(0, buff_len)
+    phi = phase_shift(buff_len, 0)
     
     exit = 0
     while(1):
@@ -390,22 +397,22 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                 buff1 = numpy.array([0]*buff_len, numpy.complex64)
                 buff2 = numpy.array([0]*buff_len, numpy.complex64)
                 print(rqs_delay,rqs_phase,rqs_start,rqs_end)
-                cbuf1.set_delay(rqs_delay)
-                phase1.set_phase(rqs_phase)
+                td.set_delay(rqs_delay)
+                phi.set_phase(rqs_phase)
                     
                 #Signal DSP Function Processing
                 if(pingpong == 0):
                     sr_read = sdr.readStream(rx_stream, [buff1], len(buff1))
                     if(sr_read.timeNs//816000 == rqs_start):
-                        buff1 = cbuf1.process_frame(buff1)
-                        buff1 = phase1.process_frame(buff1)
+                        buff1 = td.process_frame(buff1)
+                        buff1 = phi.process_frame(buff1)
                     
                     sr_write = sdr.writeStream(tx_stream, [buff2], len(buff2))
                     pingpong = 1
                 elif(pingpong == 1):
                     sr_read = sdr.readStream(rx_stream, [buff2], len(buff2))
-                    buff2 = cbuf1.process_frame(buff2)
-                    buff2 = phase1.process_frame(buff2)
+                    buff2 = td.process_frame(buff2)
+                    buff2 = phi.process_frame(buff2)
                     sr_write = sdr.writeStream(tx_stream, [buff1], len(buff1))
                     pingpong = 0
                 #End DSP Function Processing
