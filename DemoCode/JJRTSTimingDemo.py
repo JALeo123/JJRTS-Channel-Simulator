@@ -30,33 +30,21 @@ def Ethernet_Recieve(buffer1, buffer2, active):
        
     print_info = 0
     
-    
-    
     #Create a datagram socket
     localIP     = "169.254.102.212"
     localPort   = 20001
     bufferSize  = 1024
+    timeout_seconds = 1
     UDPServerSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
 
     #Bind to address and ip
     UDPServerSocket.bind((localIP, localPort))
-
+    UDPServerSocket.settimeout(timeout_seconds) #Timeout set in seconds
+    
     #Listen for incoming datagrams
     active_buffer = active[0]
     while(1):
-        if (active_buffer == 1 and active[0] == 2):
-            print("SW")
-            buffer1[0] = 1 #Set buffer to active
-            #buffer2.clear()
-            #buffer2.append(0)
-            active_buffer = 2
-        elif(active_buffer == 2 and active[0] == 1):
-            print("SW")
-            #buffer1.clear()
-            #buffer1.append(0)
-            buffer2[0] = 1 #Set buffer to active
-            active_buffer = 1
-        else:
+        try:
             #Messages to be Recieved based on L3Harris Data
             #Header Message (1)
             Message_ID = 4          #Byte Length = 4, Type INT
@@ -116,6 +104,7 @@ def Ethernet_Recieve(buffer1, buffer2, active):
 
             select_list = []
             name_list = []
+            UDPServerSocket.settimeout(timeout_seconds) #Timeout set in seconds
             bytesAddressPair = UDPServerSocket.recvfrom(bufferSize)
             message = bytesAddressPair[0]
             #print(message)
@@ -184,6 +173,19 @@ def Ethernet_Recieve(buffer1, buffer2, active):
                     #buffer1.append(0)
                     buffer2[0] = 1 #Set buffer to active
                 break
+        except e:
+            if (active_buffer == 1 and active[0] == 2):
+                print("SW")
+                buffer1[0] = 1 #Set buffer to active
+                #buffer2.clear()
+                #buffer2.append(0)
+                active_buffer = 2
+            elif(active_buffer == 2 and active[0] == 1):
+                print("SW")
+                #buffer1.clear()
+                #buffer1.append(0)
+                buffer2[0] = 1 #Set buffer to active
+                active_buffer = 1
     UDPServerSocket.close()
 
 
