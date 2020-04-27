@@ -158,8 +158,20 @@ def Ethernet_Recieve(buffer1, buffer2, active):
             else:
                 buffer2.append(buffer_struct)
             print("-")   
-            #change active buffer
             
+            #change active buffer
+            if (active_buffer == 1 and active[0] == 2):
+                print("SW")
+                buffer1[0] = 1 #Set buffer to active
+                #buffer2.clear()
+                #buffer2.append(0)
+                active_buffer = 2
+            elif(active_buffer == 2 and active[0] == 1):
+                print("SW")
+                #buffer1.clear()
+                #buffer1.append(0)
+                buffer2[0] = 1 #Set buffer to active
+                active_buffer = 1
                 
             del(select_listInfo)
             if(type1 == -1): #Exit Commands
@@ -173,6 +185,7 @@ def Ethernet_Recieve(buffer1, buffer2, active):
                     #buffer1.append(0)
                     buffer2[0] = 1 #Set buffer to active
                 break
+
         except e:
             if (active_buffer == 1 and active[0] == 2):
                 print("SW")
