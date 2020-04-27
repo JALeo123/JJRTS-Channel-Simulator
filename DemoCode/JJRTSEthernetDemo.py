@@ -383,6 +383,8 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                     rqs_start = int(select_list[1])//816000
                     rqs_end = int(select_list[2])//816000
                     
+                print(rqs_delay,rqs_phase,rqs_start,rqs_end)
+                    
                 buff1 = numpy.array([0]*buff_len, numpy.complex64)
                 buff2 = numpy.array([0]*buff_len, numpy.complex64)
                 print(rqs_delay,rqs_phase,rqs_start,rqs_end)

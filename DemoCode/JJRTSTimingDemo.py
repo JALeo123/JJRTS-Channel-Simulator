@@ -27,55 +27,13 @@ def main():
                     
 
 def Ethernet_Recieve(buffer1, buffer2, active):
-    #Messages to be Recieved based on L3Harris Data
-    #Header Message (1)
-    Message_ID = 4          #Byte Length = 4, Type INT
-    PDP_ID = 4              #Byte Length = 4, Type INT
-    Message_Length = 4      #Byte Length = 4, Type INT
-    Message_Time = 8        #Byte Length = 8, Type BCD
-    Num_Records = 4         #Byte Length = 4, Type INT
-    Record_Length = 4       #Byte Length = 4, Type INT
-    Recieve_ID = 4          #Byte Length = 4, Type INT
-    hm_list = [Message_ID,PDP_ID,Message_Length,
-                Message_Time,Num_Records,Record_Length,
-                Recieve_ID] #4=int, 8=8byteFloat, 5=4byteFloat
-    hm_list_nm = ["Message_ID","PDP_ID","Message_Length",
-                    "Message_Time","Num_Records","Record_Length",
-                    "Recieve_ID"]
-
-    #Beam Steer Command (2)
-    Action_ID = 4           #Byte Length = 4, Type INT
-    Start_Action_Tm = 4     #Byte Length = 4, Type INT
-    Stop_Action_Tm = 4      #Byte Length = 4, Type INT
-    Pulse_Type = 4          #Byte Length = 4, Type ENUM
-    Time_Delay = 4          #Byte Length = 4, Type INT
-    Phase_Adj = 4           #Byte Length = 4, Type INT
-    Ampl_Adj = 5            #Byte Length = 4, Type FLOAT
-    bsc_list = [Action_ID,Start_Action_Tm,Stop_Action_Tm,
-                Pulse_Type,Time_Delay,Phase_Adj,
-                Ampl_Adj]
-    bsc_list_nm = ["Action_ID","Start_Action_Tm","Stop_Action_Tm",
-                    "Pulse_Type","Time_Delay","Phase_Adj",
-                    "Ampl_Adj"]
-
-    #Summary Status Report (3)
-    Operability = 4         #Byte Length = 4, Type ENUM
-    Status_1 = 4            #Byte Length = 4, Type INT
-    Status_2 = 4            #Byte Length = 4, Type INT
-    Status_3 = 4            #Byte Length = 4, Type INT
-    Status_4 = 4            #Byte Length = 4, Type INT
-    ssr_list = [Operability,Status_1,Status_2,
-                Status_3,Status_4]
-    ssr_list_nm = ["Operability","Status_1","Status_2",
-                    "Status_3","Status_4"]
-       
        
     print_info = 0
     
-    buffer_struct_master = [0, hm_list, hm_list_nm, bsc_list, bsc_list_nm, ssr_list, ssr_list_nm] #First var is message type
+    
     
     #Create a datagram socket
-    localIP     = "0.0.0.0"
+    localIP     = "169.254.102.212"
     localPort   = 20001
     bufferSize  = 1024
     UDPServerSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
@@ -86,8 +44,56 @@ def Ethernet_Recieve(buffer1, buffer2, active):
     #Listen for incoming datagrams
     active_buffer = active[0]
     while(1):
+        #Messages to be Recieved based on L3Harris Data
+        #Header Message (1)
+        Message_ID = 4          #Byte Length = 4, Type INT
+        PDP_ID = 4              #Byte Length = 4, Type INT
+        Message_Length = 4      #Byte Length = 4, Type INT
+        Message_Time = 8        #Byte Length = 8, Type BCD
+        Num_Records = 4         #Byte Length = 4, Type INT
+        Record_Length = 4       #Byte Length = 4, Type INT
+        Recieve_ID = 4          #Byte Length = 4, Type INT
+        hm_list = [Message_ID,PDP_ID,Message_Length,
+                    Message_Time,Num_Records,Record_Length,
+                    Recieve_ID] #4=int, 8=8byteFloat, 5=4byteFloat
+        hm_list_nm = ["Message_ID","PDP_ID","Message_Length",
+                        "Message_Time","Num_Records","Record_Length",
+                        "Recieve_ID"]
+
+        #Beam Steer Command (2)
+        Action_ID = 4           #Byte Length = 4, Type INT
+        Start_Action_Tm = 4     #Byte Length = 4, Type INT
+        Stop_Action_Tm = 4      #Byte Length = 4, Type INT
+        Pulse_Type = 4          #Byte Length = 4, Type ENUM
+        Time_Delay = 4          #Byte Length = 4, Type INT
+        Phase_Adj = 4           #Byte Length = 4, Type INT
+        Ampl_Adj = 5            #Byte Length = 4, Type FLOAT
+        bsc_list = [Action_ID,Start_Action_Tm,Stop_Action_Tm,
+                    Pulse_Type,Time_Delay,Phase_Adj,
+                    Ampl_Adj]
+        bsc_list_nm = ["Action_ID","Start_Action_Tm","Stop_Action_Tm",
+                        "Pulse_Type","Time_Delay","Phase_Adj",
+                        "Ampl_Adj"]
+
+        #Summary Status Report (3)
+        Operability = 4         #Byte Length = 4, Type ENUM
+        Status_1 = 4            #Byte Length = 4, Type INT
+        Status_2 = 4            #Byte Length = 4, Type INT
+        Status_3 = 4            #Byte Length = 4, Type INT
+        Status_4 = 4            #Byte Length = 4, Type INT
+        ssr_list = [Operability,Status_1,Status_2,
+                    Status_3,Status_4]
+        ssr_list_nm = ["Operability","Status_1","Status_2",
+                        "Status_3","Status_4"]
+       
         #Obtain buffer locations
-        buffer_struct = buffer_struct_master.copy()
+        buffer_struct = [0, hm_list.copy(), hm_list_nm.copy(), bsc_list.copy(), bsc_list_nm.copy(), ssr_list.copy(), ssr_list_nm.copy()] #First var is message type
+        #print(buffer_struct)
+        
+        """buffer_struct[1][0] = 100
+        print(buffer_struct)
+        buffer_struct = [0, hm_list.copy(), hm_list_nm.copy(), bsc_list.copy(), bsc_list_nm.copy(), ssr_list.copy(), ssr_list_nm.copy()] #First var is message type
+        print(buffer_struct)"""
         hm_list = buffer_struct[1]
         hm_list_nm = buffer_struct[2]
         bsc_list = buffer_struct[3]
@@ -110,17 +116,17 @@ def Ethernet_Recieve(buffer1, buffer2, active):
         buffer_struct[0] = type1
 
         if(type1 == 1 or type1 == -1):
-            select_list = hm_list.copy()
+            select_list = hm_list
             select_listInfo = hm_list.copy()
-            name_list = hm_list_nm.copy()
+            name_list = hm_list_nm
         if(type1 == 2):
-            select_list = bsc_list.copy()
-            select_listInfo = bsc_list.copy()
-            name_list = bsc_list_nm.copy()
+            select_list = buffer_struct[3]
+            select_listInfo = buffer_struct[3].copy()
+            name_list = buffer_struct[4]       
         if(type1 == 3):
-            select_list = ssr_list.copy()
+            select_list = ssr_list
             select_listInfo = ssr_list.copy()
-            name_list = ssr_list_nm.copy()
+            name_list = ssr_list_nm
 
            
         #Split Message Bytes
@@ -144,7 +150,7 @@ def Ethernet_Recieve(buffer1, buffer2, active):
                 print(name_list[i] , ": " , select_list[i])
                 
             #print("\n")
-            
+        #print(buffer_struct)    
         if (active_buffer == 1):
             buffer1.append(buffer_struct)
         else:
@@ -301,7 +307,7 @@ def LimeSDR_Functions(buffer1, buffer2, active):
             buffp = shift*buff
             return buffp
             
-    type1=[]
+    type1=0
     hm_list=[]
     hm_list_nm=[]
     bsc_list=[]
@@ -323,7 +329,7 @@ def LimeSDR_Functions(buffer1, buffer2, active):
     exit = 0
     while(1):
         if(buffer1[0] == 1 or buffer2[0] == 1):
-            
+            print("hi ******************************************************")
             if(buffer1[0] == 1):
                 b = 1
                 #buffer1[0] = 0
@@ -336,52 +342,62 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                 buffer_struct = buffer2.copy()
                 buffer2.clear()
                 buffer2.append(0)
-            print("Buffer", str(b)," active!")
-            
+            #print("Buffer", str(b)," active!")
+            #print(buffer_struct)
+            print(len(buffer_struct))
             #fill the lists with all ethernet commands recieved
+            print("\n")
             for i in range(0,len(buffer_struct)-1):
                 cbuf1.append(delay(0, buff_len))
                 phase1.append(phase_shift(buff_len, 0))
                 
                 buffer = buffer_struct[i+1]
-                type1.append(buffer[0])
+                #print(buffer)
+                type1= buffer[0]
+                #print(buffer[0])
                 hm_list.append(buffer[1])
+                #print(buffer[1])
                 hm_list_nm.append(buffer[2])
+                #print(buffer[2])
                 bsc_list.append(buffer[3])
                 print(bsc_list)
                 bsc_list_nm.append(buffer[4])
                 ssr_list.append(buffer[5])
                 ssr_list_nm.append(buffer[6])
-                if(type1[i]== 1):
+                if(type1== 1):
                     select_list.append(hm_list[i].copy())
                     name_list.append(hm_list_nm[i])
-                if(type1[i] == 2):
-                    select_list.append(bsc_list[i].copy())
+                if(type1 == 2):
+                    select_list.append(bsc_list[i])
+                    
                     name_list.append(bsc_list_nm[i])
-                    print(select_list)
-                if(type1[i] == 3):
+                    print(select_list, '*********************')
+                if(type1 == 3):
                     select_list.append(ssr_list[i].copy())
                     name_list.append(ssr_list_nm[i])
-                if(type1[i] == -1):
+                if(type1 == -1):
                     print("Exit Command: LimeSDR Thread Exiting")
                     exit = 1
                     break
-                    
+                sel = select_list[i]    
                 #Enum Integration
                 #Type2 Signal, Beam Steet Command
                 pulse_type = ["n/a","1 usec/CW","10 usec/CW","16 usec/1MHz LFM","25 usec/CW",
                                 "32 usec/1MHz LFM","64 usec/1MHz LFM","125 usec/CW","128 usec/100kHz LFM",
                                 "128 usec/1MH LFM","250 usec/100kHz LFM","250 usec/1MHz LFM"]
                 operability = ["Green","White","Yellow","Red"]
-                if(type1 == 2):
-                    select_list[i][3] = pulse_type[select_list[i][3]]
-                if(type1 == 3):
-                    select_list[i][0] = operability[select_list[i][0]]
+                
+                #if(type1 == 2):
+                    #sel[3] = pulse_type[pt]
+                    #print(sel[3])
+                #if(type1 == 3):
+                    #sel[0] = operability[]
                     
                 if (print_info == 1): #Print Incoming Buffer
                     for j in range(len(name_list)):
                         print(name_list[i][j] , ": " , select_list[i][j])
-                #print("\n") 
+                print("\n") 
+                print("type1: ",type1)
                 
                 if(type1 != 2): #LimeSDR Functions, Signal Manipulations
                     rqs_delay.append(0)
@@ -393,7 +409,9 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                     rqs_phase.append(int(select_list[i][5]))
                     rqs_start.append(int(select_list[i][1])//816000)
                     rqs_end.append(int(select_list[i][2])//816000)
-                    print(rqs_delay,rqs_phase,rqs_start,rqs_end)
+                
+                print(rqs_delay,rqs_phase,rqs_start,rqs_end)
+                print(rqs_delay,rqs_phase,rqs_start,rqs_end)
                     
                 #print(rqs_delay,rqs_phase,rqs_start,rqs_end)
                 cbuf1[i].set_delay(rqs_delay[i])
@@ -421,7 +439,7 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                     elif active[0] == 2:
                         active[0]=1
                 prevhwTime = hwTime
-                break
+                
                 #--------------------------------------------------
 
         else: #Deafult ADC/DAC pass through
@@ -434,8 +452,9 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                 msTime = sr_read.timeNs//816000
                 if(rqs_start != []):
                     if(msTime >= rqs_start[0] and msTime <= rqs_end[0]):
-                        buff1 = cbuf1[0].process_frame(buff1)
-                        buff1 = phase1[0].process_frame(buff1)
+                        #print(msTime)
+                        #buff1 = cbuf1[0].process_frame(buff1)
+                        #buff1 = phase1[0].process_frame(buff1)
                             #are there more commands to process
                         if(len(rqs_start) > 1):
                             if(msTime >= rqs_start[1]):
@@ -443,21 +462,28 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                                 phase1.pop()
                                 rqs_start.pop()
                                 rqs_end.pop()
+                                rqs_phase.pop()
+                                rqs_delay.pop()
                 sr_write = sdr.writeStream(tx_stream, [buff2], len(buff2))
                 pingpong = 1
             elif(pingpong == 1):
                 sr_read = sdr.readStream(rx_stream, [buff2], len(buff2))
-                if(rqs_start != []):
+                if(rqs_start != [] and rqs_start[0] != 0):
                     if(msTime >= rqs_start[0] and msTime <= rqs_end[0]):
-                        buff1 = cbuf1[0].process_frame(buff2)
-                        buff1 = phase1[0].process_frame(buff2)
+                        #print(msTime)
+                        #buff1 = cbuf1[0].process_frame(buff2)
+                        #buff1 = phase1[0].process_frame(buff2)
                         #are there more commands to process
+                        #print(len(rqs_start))
                         if(len(rqs_start) > 1):
+                            
                             if(msTime >= rqs_start[1]):
                                 cbuf1.pop()
                                 phase1.pop()
                                 rqs_start.pop()
                                 rqs_end.pop()
+                                rqs_delay.pop()
+                                rqs_phase.pop()
                 sr_write = sdr.writeStream(tx_stream, [buff1], len(buff1))
                 pingpong = 0
             #End DSP Function Processing
@@ -466,6 +492,12 @@ def LimeSDR_Functions(buffer1, buffer2, active):
             hwTime = sr_read.timeNs
             #print(hwTime//816000)
             if(hwTime < prevhwTime):
+                rqs_delay.clear()
+                rqs_phase.clear()
+                rqs_start.clear()
+                rqs_end.clear()
+                cbuf1.clear()
+                phase1.clear()
                 if active[0] == 1: 
                     active[0]=2
                 elif active[0] == 2:
