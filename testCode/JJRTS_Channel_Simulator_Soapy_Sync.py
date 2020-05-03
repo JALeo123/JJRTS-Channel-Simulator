@@ -248,37 +248,36 @@ def LimeSDR_Functions(buffer1, buffer2, active):
     #Create class to initialize DSP object and such
     class time_delay(object):
         """
-        
+    
         A Class that implements time delay
-        
+    
         """
-        
+    
         def __init__ (self, delay_samps = 0, Nbuffer_len = 1024):
             """
             Initialize the object
             """
-            
+        
             self.delay = delay_samps
             self.Nbuf = Nbuffer_len
-            self.prev = numpy.zeros(self.Nbuf, numpy.complex64)
-            
+            self.p = numpy.zeros(2*self.Nbuf, numpy.complex64)
+            self.cbuff = numpy.zeros(2*self.Nbuf, numpy.complex64)
+            self.out = numpy.zeros(self.Nbuf, numpy.complex64)
+        
         def set_delay(self,new_delay):
             self.delay = new_delay
-            self.delta = self.Nbuf - self.delay 
-            
-            ""
+            self.delta = self.Nbuf - self.delay
+        
+    
         def process_frame(self,x):
             """
             Process a frame of samples
-            Previous data is appended via self.prev
-            self.delta sizes the prev buffer based on the currently requested delay
-            x is sized such that it is "rolled" by a certain number of sample spaces
             """
-            
-            y = numpy.append(self.prev[self.delta:self.Nbuf], x[:self.delta])
-            self.prev = x
 
-            return y   
+            self.cbuff[self.delta:self.Nbuf] = self.p[0:self.delay]
+            self.cbuff[0:self.delta] = x[self.delay:self.Nbuf]
+            self.p = x    
+            return self.cbuff[0:self.Nbuf]  
               
 
     #Create class to initialize DSP object and such
@@ -300,7 +299,7 @@ def LimeSDR_Functions(buffer1, buffer2, active):
             self.phase = new_phase
 
         def process_frame(self, buff):
-            shift = self.coslut[self.phase] - 1j*self.sinlut[self.phase]
+            shift = self.coslut[self.phase] + 1j*self.sinlut[self.phase]
             buffp = shift*buff
             return buffp
             
