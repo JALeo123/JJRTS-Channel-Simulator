@@ -1,12 +1,18 @@
 import socket
 import struct
-
+import time
+"""
 serverAddressPort = ("169.254.102.212", 20001)
 #Create a UDP socket at client side
 UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-
+"""
 def sendEthernet(msgType, msgList, list_bytes):
+    serverAddressPort = ("169.254.102.212", 20001)
+    print(msgList)
+    #Create a UDP socket at client side
+    UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
     message = struct.pack('i', msgType)
+    select_list = []
     select_list = msgList
     select_list_bytes = list_bytes
     for i in range(len(select_list_bytes)):
@@ -19,9 +25,12 @@ def sendEthernet(msgType, msgList, list_bytes):
 
     #Send to server using created UDP socket
     UDPClientSocket.sendto(message, serverAddressPort)
+    
 
     print("Address Port: ", str(serverAddressPort))
     print("Raw Message: ", message)
+    UDPClientSocket.close()
+    
 
 
 #Test Messages
@@ -41,22 +50,50 @@ hm_list_bytes = [4,4,4,8,4,4,4] #4=int, 8=8byteFloat, 5=4byteFloat
 #Beam Steer Command (2)
 
 #Test Beam Steer Commands
-Action_ID = [1,2,3,4,5,6,7,8,9,10]       #Byte Length = 4, Type INT
-Start_Action_Tm = [7344000,9792000,14688000,17136000,20400000,22848000,26112000,34272000,40800000,44064000]   #Byte Length = 4, Type INT
-Stop_Action_Tm = [42432000,43248000,44064000,44880000,45696000,46512000,47328000,48144000,48960000,49776000]   #Byte Length = 4, Type INT
-Pulse_Type = [1,2,3,4,5,6,7,8,9,10]          #Byte Length = 4, Type ENUM
+Action_ID = [11,22,333,44,55,66,77,88,999,1010]       #Byte Length = 4, Type INT
+
+Start_Action_Tm = [7344000,9792000,11424000,14688000,21216000,25296000,30192000,36720000,44064000,48960000]   #Byte Length = 4, Type INT
+Stop_Action_Tm = [20400000,20400000,21216000,21216000,27744000,35088000,39268000,41616000,49776000,49776000]   #Byte Length = 4, Type INT
+Pulse_Type = [1,2,3,3,5,6,7,7,9,10]          #Byte Length = 4, Type ENUM
 Time_Delay = [1,10,30,80,129,300,500,850,910,1000]   #Byte Length = 4, Type INT
 Phase_Adj = [0,35,67,90,129,180,225,280,300,345]      #Byte Length = 4, Type INT
 Ampl_Adj = [0,0,0,0,0,0,0,0,0,0]         #Byte Length = 4, Type FLO]AT
 bsc_list = []
-
-for i in range(10):
-    print(i)
-    bsc_list.append([int(Action_ID[i]),int(Start_Action_Tm[i]),int(Stop_Action_Tm[i]),int(Pulse_Type[i]),int(Time_Delay[i]),int(Phase_Adj[i]),float(Ampl_Adj[i])])
-    print(bsc_list[i])
 bsc_list_bytes = [4,4,4,4,4,4,5]
+for i in range(10):
+    #print(i)
+    bsc_list.append([int(Action_ID[i]),int(Start_Action_Tm[i]),int(Stop_Action_Tm[i]),int(Pulse_Type[i]),int(Time_Delay[i]),int(Phase_Adj[i]),float(Ampl_Adj[i])])
+#print(bsc_list)    
 
-sendEthernet(2,bsc_list[1],bsc_list_bytes)
+#sendEthernet(2,bsc_list[2],bsc_list_bytes)
+#time.sleep(0.015)
+#sendEthernet(2,bsc_list[4],bsc_list_bytes)
+
+
+# Timing Test Routine
+# Run Five Commands and Verify Command Timing
+"""
+    1. Phase Shift 35 deg, Time Delay 10 samples, Start Time 12, End Time 25
+    2. Phase Shift 67 deg, Time Delay 30 samples, Start Time 14, End Time 26
+    3. Phase Shift 90 deg, Time Delay 80 Samples, Start Time 18, End Time 26
+    4. Phase Shift 180 deg, Time Delay 300 Samples, Start Time 31, End Time 43
+    5. Phase Shift 280 deg, Time Delay 850 Samples, Start Time 45, End Time 51
+"""
+while(1):
+    time.sleep(0.05)
+    
+    sendEthernet(2,bsc_list[1],bsc_list_bytes)
+    sendEthernet(2,bsc_list[2],bsc_list_bytes)
+    sendEthernet(2,bsc_list[3],bsc_list_bytes)
+    sendEthernet(2,bsc_list[5],bsc_list_bytes)
+    sendEthernet(2,bsc_list[7],bsc_list_bytes)
+    
+
+# Ethernet recieve test routine
+# Show that all command types can be recieved.
+"""
+
+"""    
 
 
 #Summary Status Report (3)
@@ -71,5 +108,5 @@ ssr_list = [int(Operability),int(Status_1),int(Status_2),
             int(Status_3),int(Status_4)]
 ssr_list_bytes = [4,4,4,4,4]
 
-UDPClientSocket.close()
+
 
