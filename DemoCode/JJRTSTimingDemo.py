@@ -366,7 +366,7 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                 buffer_struct = buffer2.copy()
                 buffer2.clear()
                 buffer2.append(0)
-            print("Buffer",str(b),"active!")
+           # print("Buffer",str(b),"active!")
             #print(buffer_struct)
             #rint(len(buffer_struct))
             #fill the lists with all ethernet commands recieved
@@ -500,13 +500,12 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                         
                     elif(msTime >= rqs_end[0]):
                         if(len(rqs_start) > 1):
-                            if(msTime >= rqs_start[1]):
-                                cbuf1.pop(0)
-                                phase1.pop(0)
-                                rqs_start.pop(0)
-                                rqs_end.pop(0)
-                                rqs_delay.pop(0)
-                                rqs_phase.pop(0)
+                            cbuf1.pop(0)
+                            phase1.pop(0)
+                            rqs_start.pop(0)
+                            rqs_end.pop(0)
+                            rqs_delay.pop(0)
+                            rqs_phase.pop(0)
                 sr_write = sdr.writeStream(tx_stream, [buff2], len(buff2))
                 pingpong = 1
             elif(pingpong == 1):
@@ -549,7 +548,7 @@ def LimeSDR_Functions(buffer1, buffer2, active):
             hwTime = sr_read.timeNs
             #print(hwTime//816000)
             if(hwTime < prevhwTime):
-                #print("BufferSwitch")
+                print("BufferSwitch")
                 rqs_delay.clear()
                 rqs_phase.clear()
                 rqs_start.clear()
