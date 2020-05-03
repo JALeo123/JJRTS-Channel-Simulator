@@ -260,8 +260,8 @@ def LimeSDR_Functions(buffer1, buffer2, active):
         
             self.delay = delay_samps
             self.Nbuf = Nbuffer_len
-            self.p = numpy.zeros(2*self.Nbuf, numpy.complex64)
-            self.cbuff = numpy.zeros(2*self.Nbuf, numpy.complex64)
+            self.p = numpy.zeros(self.Nbuf, numpy.complex64)
+            self.cbuff = numpy.zeros(self.Nbuf, numpy.complex64)
             self.out = numpy.zeros(self.Nbuf, numpy.complex64)
         
         def set_delay(self,new_delay):
@@ -274,10 +274,10 @@ def LimeSDR_Functions(buffer1, buffer2, active):
             Process a frame of samples
             """
 
-            self.cbuff[self.delta:self.Nbuf] = self.p[0:self.delay]
-            self.cbuff[0:self.delta] = x[self.delay:self.Nbuf]
+            self.cbuff[self.delta:] = self.p[0:self.delay]
+            self.cbuff[0:self.delta] = x[self.delay:]
             self.p = x    
-            return self.cbuff[0:self.Nbuf]  
+            return self.cbuff  
               
 
     #Create class to initialize DSP object and such
