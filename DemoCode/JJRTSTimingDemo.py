@@ -89,12 +89,8 @@ def Ethernet_Recieve(buffer1, buffer2, active):
            
             #Obtain buffer locations
             buffer_struct = [0, hm_list.copy(), hm_list_nm.copy(), bsc_list.copy(), bsc_list_nm.copy(), ssr_list.copy(), ssr_list_nm.copy()] #First var is message type
-            #print(buffer_struct)
+                        
             
-            """buffer_struct[1][0] = 100
-            print(buffer_struct)
-            buffer_struct = [0, hm_list.copy(), hm_list_nm.copy(), bsc_list.copy(), bsc_list_nm.copy(), ssr_list.copy(), ssr_list_nm.copy()] #First var is message type
-            print(buffer_struct)"""
             hm_list = buffer_struct[1]
             hm_list_nm = buffer_struct[2]
             bsc_list = buffer_struct[3]
@@ -105,11 +101,9 @@ def Ethernet_Recieve(buffer1, buffer2, active):
             select_list = []
             name_list = []
             UDPServerSocket.settimeout(timeout_seconds) #Timeout set in seconds
-            #print("A")
+            
             bytesAddressPair = UDPServerSocket.recvfrom(bufferSize)
-            #print("b")
             message = bytesAddressPair[0]
-            #print(message)
             address = bytesAddressPair[1]
 
             rawclientMsg = "Raw Message: {}".format(message)
@@ -134,7 +128,6 @@ def Ethernet_Recieve(buffer1, buffer2, active):
 
                
             #Split Message Bytes
-            #PROBLEM HERE
             r = 4
             for i in range(len(select_listInfo)):
                 tmp = select_listInfo[i]
@@ -153,26 +146,16 @@ def Ethernet_Recieve(buffer1, buffer2, active):
                 for i in range(len(name_list)):
                     print(name_list[i] , ": " , select_list[i])
                     
-                #print("\n")
-            #print(buffer_struct)    
+ 
             if (active_buffer == 1):
                 buffer1.append(buffer_struct)
             else:
                 buffer2.append(buffer_struct)
-            #print("-")   
-            #change active buffer
-             #print("except")
-             
+                       
             if (active_buffer == 1 and active[0] == 2):
-               #print("SW")
                 buffer1[0] = 1 #Set buffer to active
-                #buffer2.clear()
-                #buffer2.append(0)
                 active_buffer = 2
             elif(active_buffer == 2 and active[0] == 1):
-               #print("SW")
-                #buffer1.clear()
-                #buffer1.append(0)
                 buffer2[0] = 1 #Set buffer to active
                 active_buffer = 1
                 
@@ -181,25 +164,14 @@ def Ethernet_Recieve(buffer1, buffer2, active):
                 print("Exit Command: Ethernet Thread Exiting")
                 if (active_buffer == 1):
                     buffer1[0] = 1 #Set buffer to active
-                    #buffer2.clear()
-                    #buffer2.append(0)
                 elif(active_buffer == 2):
-                    #buffer1.clear()
-                    #buffer1.append(0)
                     buffer2[0] = 1 #Set buffer to active
                 break
         except:
-            #print("except")
             if (active_buffer == 1 and active[0] == 2):
-                #rint("SW")
                 buffer1[0] = 1 #Set buffer to active
-                #buffer2.clear()
-                #buffer2.append(0)
                 active_buffer = 2
             elif(active_buffer == 2 and active[0] == 1):
-                #rint("SW")
-                #buffer1.clear()
-                #buffer1.append(0)
                 buffer2[0] = 1 #Set buffer to active
                 active_buffer = 1
     UDPServerSocket.close()
@@ -248,28 +220,34 @@ def LimeSDR_Functions(buffer1, buffer2, active):
     sdr.setBandwidth(SOAPY_SDR_TX, 0, bandwidth)
 
     #Clock Sources - Try to use External reference clock for something useful
-    print("************* Clock Stuff ****************")
     #sdr.setClockSource(REF_CLK_IN)
     print(sdr.getMasterClockRate())
     print(sdr.listClockSources())
     print(sdr.getClockSource())
     print(sdr.getTimeSource())
     
-    #print(sdr.getMasterClockRate())
-    #--------------------------------------------------------
+    """
+    It appears like many of these functions for changing clock source are
+    not supported by the Python API.The last three return no value even when 
+    there it an attached and phase locked external clock.
+    
+    If it is determined that this functionality is nessisary it might have
+    to be implemented using another code API.
+    
+        https://discourse.myriadrf.org/t/10-mhz-ref-input/813/41
+        https://groups.google.com/forum/#!topic/pothos-users/-09dY-VbuJc
+        https://discourse.myriadrf.org/t/using-different-clock-sources-with-soapysdr-python/5981
+    
+    """
 
     #create a re-usable buffer for rx samples
     buff_len = 1024
-    #buff = numpy.array([0]*1024, numpy.complex64)
-    #print("\nBuffer Length:", len(buff), "\n")
     prevhwTime = 0
     #Set buffer 1 to active to get the program started
     #setup a stream (complex floats)
     rx_stream = sdr.setupStream(SOAPY_SDR_RX, SOAPY_SDR_CF32)
     tx_stream = sdr.setupStream(SOAPY_SDR_TX, SOAPY_SDR_CF32)
     time.sleep(1)
-    #sdr.setDCOffsetMode(SOAPY_SDR_RX, 0, False)
-    #sdr.setDCOffsetMode(SOAPY_SDR_TX, 0, False)
 
     print("Activate TX and RX Stream")
     sdr.activateStream(tx_stream)
@@ -278,33 +256,39 @@ def LimeSDR_Functions(buffer1, buffer2, active):
     time.sleep(1)
     
     #Create class to initialize DSP object and such
-    class delay(object): 
-        #initialize object
-        def __init__(self, delay_samps = 0, buff_size = buff_len, phase_index = 0):
-            # Time delay using circular buffer
+    class time_delay(object):
+        """
+
+        A Class that implements time delay
+
+        """
+
+        def __init__ (self, delay_samps = 0, Nbuffer_len = 1024):
+            """
+            Initialize the object
+            """
+        
             self.delay = delay_samps
-            self.ptr = 0
-            self.buffsize = buff_size
-            self.cirbuff = numpy.array([0]*buff_size, numpy.complex64)
-
-        #Set user defines delay
-        def set_delay(self, new_delay):
+            self.Nbuf = Nbuffer_len
+            self.p = numpy.zeros(self.Nbuf, numpy.complex64)
+            self.cbuff = numpy.zeros(self.Nbuf, numpy.complex64)
+            self.out = numpy.zeros(self.Nbuf, numpy.complex64)
+        
+        def set_delay(self,new_delay):
             self.delay = new_delay
+            self.delta = self.Nbuf - self.delay
+        
 
-        def process_sample(self, buff):
-            self.cirbuff[self.ptr] = buff
-            buffd = self.cirbuff[(self.ptr - self.delay) % self.buffsize]
-            self.ptr = (self.ptr + 1) % self.buffsize
+        def process_frame(self,x):
+            """
+            Process a frame of samples
+            """
 
-            return buffd
-
-        def process_frame(self, buff):
-            Nframe = len(buff)
-            buffd = numpy.array([0]*Nframe, numpy.complex64)
-            for k in range(Nframe):
-                buffd[k] = self.process_sample(buff[k])
-
-            return buffd
+            self.cbuff[self.delta:] = self.p[0:self.delay]
+            self.cbuff[0:self.delta] = x[self.delay:]
+            self.p = x    
+            return self.cbuff  
+              
 
     #Create class to initialize DSP object and such
     class phase_shift(object): 
@@ -325,7 +309,7 @@ def LimeSDR_Functions(buffer1, buffer2, active):
             self.phase = new_phase
 
         def process_frame(self, buff):
-            shift = self.coslut[self.phase] +1j*self.sinlut[self.phase]
+            shift = self.coslut[self.phase] + 1j*self.sinlut[self.phase]
             buffp = shift*buff
             return buffp
             
@@ -350,52 +334,41 @@ def LimeSDR_Functions(buffer1, buffer2, active):
     
     exit = 0
     while(1):
-        
+        #Are there Ethernet commands recieved in the last sync period to apply
         if(buffer1[0] == 1 or buffer2[0] == 1):
-           #print("HI")
-            #print("hi ******************************************************")
             if(buffer1[0] == 1):
                 b = 1
-                #buffer1[0] = 0
                 buffer_struct = buffer1.copy()
                 buffer1.clear()
                 buffer1.append(0)
             elif(buffer2[0] == 1):
                 b = 2
-                #buffer2[0] = 0
                 buffer_struct = buffer2.copy()
                 buffer2.clear()
                 buffer2.append(0)
-           # print("Buffer",str(b),"active!")
-            #print(buffer_struct)
-            #rint(len(buffer_struct))
-            #fill the lists with all ethernet commands recieved
-            #int("\n")
+            #print("Buffer",str(b),"active!")
+            
+            #Fill Python Lists with Command Data
             for i in range(0,len(buffer_struct)-1):
-                cbuf1.append(delay(0, buff_len))
+                cbuf1.append(time_delay(0, buff_len))
                 phase1.append(phase_shift(buff_len, 0))
                 
                 buffer = buffer_struct[i+1]
-                #print(buffer)
+                
                 type1= buffer[0]
-                #print(buffer[0])
                 hm_list.append(buffer[1])
-                #print(buffer[1])
                 hm_list_nm.append(buffer[2])
-                #print(buffer[2])
                 bsc_list.append(buffer[3])
-                #print(bsc_list)
                 bsc_list_nm.append(buffer[4])
                 ssr_list.append(buffer[5])
                 ssr_list_nm.append(buffer[6])
+                
                 if(type1== 1):
                     select_list.append(hm_list[i].copy())
                     name_list.append(hm_list_nm[i])
                 if(type1 == 2):
                     select_list.append(bsc_list[i])
-                    
                     name_list.append(bsc_list_nm[i])
-                    #print(select_list, '*********************')
                 if(type1 == 3):
                     select_list.append(ssr_list[i].copy())
                     name_list.append(ssr_list_nm[i])
@@ -403,7 +376,8 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                     print("Exit Command: LimeSDR Thread Exiting")
                     exit = 1
                     break
-                sel = select_list[i]    
+                sel = select_list[i]
+                    
                 #Enum Integration
                 #Type2 Signal, Beam Steet Command
                 pulse_type = ["n/a","1 usec/CW","10 usec/CW","16 usec/1MHz LFM","25 usec/CW",
@@ -413,15 +387,13 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                 
                 #if(type1 == 2):
                     #sel[3] = pulse_type[pt]
-                    #print(sel[3])
                 #if(type1 == 3):
                     #sel[0] = operability[]
                     
                 if (print_info == 1): #Print Incoming Buffer
                     for j in range(len(name_list)):
                         print(name_list[i][j] , ": " , select_list[i][j])
-                #print("\n") 
-                #print("type1: ",type1)
+
                 
                 if(type1 != 2): #LimeSDR Functions, Signal Manipulations
                     rqs_delay.append(0)
@@ -434,10 +406,6 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                     rqs_start.append(int(select_list[i][1])//816000)
                     rqs_end.append(int(select_list[i][2])//816000)
                 
-                #print(rqs_delay,rqs_phase,rqs_start,rqs_end)
-                #print(rqs_delay,rqs_phase,rqs_start,rqs_end)
-                    
-                #print(rqs_delay,rqs_phase,rqs_start,rqs_end)
                 cbuf1[i].set_delay(rqs_delay[i])
                 phase1[i].set_phase(rqs_phase[i])
             
@@ -459,7 +427,6 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                 
                 
                 # Buffer Switch Logic - using timeNs -------------
-                
                 hwTime = sr_read.timeNs
                 if(hwTime==0 < prevhwTime):
                     print("BufferSwitch")
@@ -468,24 +435,23 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                     elif active[0] == 2:
                         active[0]=1
                 prevhwTime = hwTime
-                
                 #--------------------------------------------------
-            #rint(rqs_start,rqs_end,rqs_phase,rqs_delay)
+
 
         else: #Deafult ADC/DAC pass through
             #Signal DSP Function Processing
-            #buff_len = 2048
             buff1 = numpy.array([0]*buff_len, numpy.complex64)
             buff2 = numpy.array([0]*buff_len, numpy.complex64)
             if(pingpong == 0):
                 sr_read = sdr.readStream(rx_stream, [buff1], len(buff1))
                 msTime = sr_read.timeNs//816000
+                #Print Time to Help Validate Command Timing
                 print(msTime)
                 if(rqs_start != []):
                     if(msTime >= rqs_start[0] and msTime <= rqs_end[0]):
                         if(len(rqs_start) > 1):
+                            #Interuppt the current command if there is another that needs to start
                             if(msTime >= rqs_start[1]):
-                                #rint("New Command Running")
                                 cbuf1.pop(0)
                                 phase1.pop(0)
                                 rqs_start.pop(0)
@@ -493,11 +459,10 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                                 rqs_phase.pop(0)
                                 rqs_delay.pop(0)
                         print("Phase:",rqs_phase[0],"deg. Delay:",rqs_delay[0],"samples")
-                        #buff1 = cbuf1[0].process_frame(buff1)
-                        #buff1 = phase1[0].process_frame(buff1)
-                            #are there more commands to process
-                        #print(len(rqs_start))
-                        
+                        buff1 = cbuf1[0].process_frame(buff1)
+                        buff1 = phase1[0].process_frame(buff1)
+
+                    #If command is done repare to run the next command    
                     elif(msTime >= rqs_end[0]):
                         if(len(rqs_start) > 1):
                             cbuf1.pop(0)
@@ -511,26 +476,23 @@ def LimeSDR_Functions(buffer1, buffer2, active):
             elif(pingpong == 1):
                 sr_read = sdr.readStream(rx_stream, [buff2], len(buff2))
                 msTime = sr_read.timeNs//816000
+                #Print Time to Help Validate Command Timing
                 print(msTime)
                 if(rqs_start != [] and rqs_start[0] != 0):
                     if(msTime >= rqs_start[0] and msTime <= rqs_end[0]):
                         if(len(rqs_start) > 1):
                             if(msTime >= rqs_start[1]):
-                               #print("New Command Running")
                                 cbuf1.pop(0)
                                 phase1.pop(0)
-                               #print(rqs_start)
                                 rqs_start.pop(0)
-                               #print(rqs_start)
                                 rqs_end.pop(0)
                                 rqs_delay.pop(0)
                                 rqs_phase.pop(0)
+                        #Print Info about Currently Running Command
                         print("Phase:",rqs_phase[0]," deg. Delay:",rqs_delay[0],"samples")
-                        #buff1 = cbuf1[0].process_frame(buff2)
-                        #buff1 = phase1[0].process_frame(buff2)
-                        #are there more commands to process
-                        #print(len(rqs_start))
-                       
+                        buff1 = cbuf1[0].process_frame(buff2)
+                        buff1 = phase1[0].process_frame(buff2)
+                    #If command is done prepare to proccess the next command
                     elif(msTime >= rqs_end[0]):
                         if(len(rqs_start) > 1):
                             if(msTime >= rqs_start[1]):
@@ -546,7 +508,6 @@ def LimeSDR_Functions(buffer1, buffer2, active):
                 
             # Buffer Switch Logic - using timeNs -------------
             hwTime = sr_read.timeNs
-            #print(hwTime//816000)
             if(hwTime < prevhwTime):
                 print("BufferSwitch")
                 rqs_delay.clear()
